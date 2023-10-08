@@ -241,27 +241,10 @@ Item {
         id: aoaWidget
     }
 
-    MapWidget {
-        id: mapWidget
-    }
-
-    // Load it only when adsb was enabled at compile time
-    // Weird - using a loader makes the adsb widget not re-positionable ?!
-    /*Loader {
-        source: {
-            if (QOPENHD_ENABLE_ADSB_LIBRARY) {
-                return "widgets/AdsbWidget.qml";
-            }
-            return ""
-        }
-    }*/
-    AdsbWidget{
-        id: adsbwidget
-    }
-
     ExampleWidget {
         id: exampleWidget
     }
+
     RecordVideoWidget {
         id: record_video_widget
     }

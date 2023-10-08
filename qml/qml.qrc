@@ -173,9 +173,6 @@
         <file>ui/configpopup/MavlinkParamEditor.qml</file>
         <file>ui/configpopup/AppDeveloperStatsPanel.qml</file>
         <file>ui/widgets/QRenderStatsWidget.qml</file>
-        <file>ui/widgets/MapWidget.qml</file>
-        <file>ui/widgets/MapWidgetForm.ui.qml</file>
-        <file>ui/widgets/map/MapComponent.qml</file>
         <file>ui/configpopup/RcDebugScreenOpenHD.qml</file>
         <file>ui/configpopup/ConfigPopup.qml</file>
         <file>resources/master1.png</file>
@@ -187,7 +184,6 @@
         <file>ui/widgets/AirspeedTempWidget.qml</file>
         <file>ui/widgets/AoaWidget.qml</file>
         <file>ui/widgets/MessageHUDRow.qml</file>
-        <file>ui/widgets/AdsbWidget.qml</file>
         <file>ui/configpopup/ChannelScanDialoque.qml</file>
         <file>ui/configpopup/MavlinkSetupPiCameraPanel.qml</file>
         <file>ui/configpopup/PiCameraConfigListOriginal.qml</file>

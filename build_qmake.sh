@@ -5,11 +5,10 @@
 rm -rf build
 mkdir build
 cd build
-qmake ..
 
-# Check if the OS is macOS
-if [[ "$(uname)" == "Darwin" ]]; then
-    make -j2
-else
-    make -j$(( $(nproc) / 2 ))
-fi
+#/usr/lib/aarch64-linux-gnu/qt5/bin/qmake ..
+/usr/local/Qt-5.15.10/bin/qmake ..
+
+make -j4
+
+cp lunch.sh build/release
