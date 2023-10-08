@@ -71,7 +71,7 @@ LinuxBuild {
 # see app/adsb/adsb_lib.pri for an example
 QT +=core quick qml gui \
     widgets
-QT += opengl
+# QT += opengl
 
 INCLUDEPATH += $$PWD/lib
 INCLUDEPATH += $$PWD/app
@@ -238,13 +238,11 @@ MacBuild {
 }
 
 LinuxBuild {
-    CONFIG += EnableSpeech
-    message("LinuxBuild - config")
+    message("LinuxBuild")
 }
 
 JetsonBuild {
     message("JetsonBuild")
-    CONFIG += EnableSpeech
 }
 
 WindowsBuild {
@@ -262,12 +260,6 @@ AndroidBuild {
     include(app/videostreaming/android/videostreamingandroid.pri)
     # needed to build android from windows, but not from linux
     QMAKE_PROJECT_DEPTH = 0
-}
-
-EnableSpeech {
-    message("EnableSpeech")
-    DEFINES += ENABLE_SPEECH
-    QT += texttospeech
 }
 
 
