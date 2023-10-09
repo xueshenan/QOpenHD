@@ -22,11 +22,6 @@ HEADERS += \
     $$PWD/avcodec_decoder.h \
 
 
-
-# experimental
-#INCLUDEPATH += /usr/local/include/uvgrtp
-#LIBS += -L/usr/local/lib -luvgrtp
-
 # dirty way to check if we are on rpi and therefore should use the external decode service
 CONFIG += link_pkgconfig
 packagesExist(mmal) {

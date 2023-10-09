@@ -3,7 +3,6 @@
 
 // Needs to be kept in sync with openhd
 
-//namespace OHDDefines{
 // OpenHD mavlink sys IDs
 static constexpr auto OHD_SYS_ID_GROUND = 100;
 static constexpr auto OHD_SYS_ID_AIR = 101;

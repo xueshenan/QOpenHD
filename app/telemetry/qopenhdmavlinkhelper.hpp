@@ -2,18 +2,19 @@
 #define QOPENHDMAVLINKHELPER_H
 
 #include <chrono>
-#include <qsettings.h>
-#include "mavsdk_include.h"
-#include <QByteArray>
 #include <sstream>
+#include <qsettings.h>
+#include <QByteArray>
+#include "mavsdk_include.h"
 
-namespace QOpenHDMavlinkHelper{
+namespace QOpenHDMavlinkHelper {
 
 // time in us, for mavlink
 static uint64_t getTimeMicroseconds(){
     const auto time=std::chrono::steady_clock::now().time_since_epoch();
     return std::chrono::duration_cast<std::chrono::microseconds>(time).count();
 }
+
 // for the heartbeat
 static uint64_t getTimeMilliseconds(){
     const auto time=std::chrono::steady_clock::now().time_since_epoch();
@@ -40,6 +41,7 @@ static int get_vehicle_battery_n_cells(){
     const int vehicle_battery_n_cells = settings.value("vehicle_battery_n_cells", 3).toInt();
     return vehicle_battery_n_cells;
 }
+
 static double calclate_voltage_per_cell(double voltage){
     const auto vehicle_battery_n_cells=get_vehicle_battery_n_cells();
     // do not divide by 0

@@ -71,14 +71,6 @@ private:
 private:
     // Calculate fps, but note that this might not give the exact/correct value in some case(s)
     FPSCalculator m_estimate_fps_calculator{};
-#ifdef OPENHD_USE_LIB_UVGRTP
-private:
-    uvgrtp::context m_ctx;
-    uvgrtp::session *m_session;
-    uvgrtp::media_stream *m_receiver;
-public:
-    void uvgrtp_rtp_receive_hook(void *arg, uvgrtp::frame::rtp_frame *frame);
-#endif
 private:
     int n_frames_non_idr=0;
     int n_frames_idr=0;
