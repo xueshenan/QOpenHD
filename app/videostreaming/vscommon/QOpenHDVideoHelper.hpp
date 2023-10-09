@@ -15,7 +15,6 @@ namespace QOpenHDVideoHelper{
 // Must be in sync with OpenHD
 static constexpr auto kDefault_udp_rtp_input_ip_address="127.0.0.1";
 static constexpr auto kDefault_udp_rtp_input_port_primary=5600;
-static constexpr auto kDefault_udp_rtp_input_port_secondary=5600;
 
 // OpenHD supported video codecs
 typedef enum VideoCodec {
@@ -23,28 +22,25 @@ typedef enum VideoCodec {
   VideoCodecH265=1,
   VideoCodecMJPEG=2
 } VideoCodec;
-static VideoCodec intToVideoCodec(int videoCodec){
-    if(videoCodec==0)return VideoCodecH264;
-    if(videoCodec==1)return VideoCodecH265;
-    if(videoCodec==2)return VideoCodecMJPEG;
+
+static VideoCodec intToVideoCodec(int videoCodec) {
+    if (videoCodec == 0) {
+        return VideoCodecH264;
+    }
+    if (videoCodec == 1) {
+        return VideoCodecH265;
+    }
+    if (videoCodec == 2) {
+        return VideoCodecMJPEG;
+    }
     qDebug() << "VideoCodec::intToVideoCodec::somethingWrong,using H264 as default";
     return VideoCodecH264;
 }
+
 static std::string video_codec_to_string(const VideoCodec& codec){
     if(codec==VideoCodecH264)return "h264";
     if(codec==VideoCodecH265)return "h265";
     return "mjpeg";
-}
-
-enum class VideoTestMode{
-    DISABLED, // disabled
-    RAW_VIDEO, // raw video into qmlglsink. Doesn't check video decoding capabilities, only qmlsink capabilities
-    RAW_VIDEO_ENCODE_DECODE // encode raw video, then decode it and then into qmlsink. When this passes, platform can do video decoding
-};
-static VideoTestMode videoTestModeFromInt(int value){
-    if(value==1)return VideoTestMode::RAW_VIDEO;
-    if(value==2)return VideoTestMode::RAW_VIDEO_ENCODE_DECODE;
-    return VideoTestMode::DISABLED;
 }
 
 /**
@@ -52,13 +48,10 @@ static VideoTestMode videoTestModeFromInt(int value){
  * Not seperated for primary / secondary stream
  */
 struct GenericVideoSettings{
-    // used for testing and development.
-    VideoTestMode dev_test_video_mode = VideoTestMode::DISABLED;
     //
     bool dev_enable_custom_pipeline=false;
     std::string dev_custom_pipeline="";
     //
-    int dev_limit_fps_on_test_file=-1;
     bool dev_use_low_latency_parser_when_possible=true;
     // feed incomplete frame(s) to the decoder, in contrast to only only feeding intact frames,
     // but not caring about missing previous frames
@@ -74,10 +67,8 @@ struct GenericVideoSettings{
 
     // 2 configs are equal if all members are exactly the same.
     bool operator==(const GenericVideoSettings &o) const {
-       return this->dev_test_video_mode == o.dev_test_video_mode &&
-               this->dev_enable_custom_pipeline==o.dev_enable_custom_pipeline &&
+       return  this->dev_enable_custom_pipeline==o.dev_enable_custom_pipeline &&
                this->dev_custom_pipeline==o.dev_custom_pipeline &&
-               this->dev_limit_fps_on_test_file == o.dev_limit_fps_on_test_file &&
                this->dev_use_low_latency_parser_when_possible == o.dev_use_low_latency_parser_when_possible &&
                this->dev_feed_incomplete_frames_to_decoder == o.dev_feed_incomplete_frames_to_decoder &&
                this->dev_rpi_use_external_omx_decode_service==o.dev_rpi_use_external_omx_decode_service &&
@@ -158,10 +149,8 @@ static bool get_primary_video_scale_to_fit(){
 static GenericVideoSettings read_generic_from_settings(){
     QSettings settings;
     GenericVideoSettings _videoStreamConfig;
-    _videoStreamConfig.dev_test_video_mode=QOpenHDVideoHelper::videoTestModeFromInt(settings.value("dev_test_video_mode", 0).toInt());
 
     _videoStreamConfig.dev_enable_custom_pipeline=settings.value("dev_enable_custom_pipeline",false).toBool();
-    _videoStreamConfig.dev_limit_fps_on_test_file=settings.value("dev_limit_fps_on_test_file",-1).toInt();
     _videoStreamConfig.dev_use_low_latency_parser_when_possible=settings.value("dev_use_low_latency_parser_when_possible",true).toBool();
     //
     _videoStreamConfig.dev_rpi_use_external_omx_decode_service=settings.value("dev_rpi_use_external_omx_decode_service", true).toBool();

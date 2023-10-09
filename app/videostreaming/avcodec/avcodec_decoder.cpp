@@ -30,7 +30,7 @@ static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type){
 }
 
 static enum AVPixelFormat wanted_hw_pix_fmt;
-static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,const enum AVPixelFormat *pix_fmts){
+static enum AVPixelFormat get_hw_format(AVCodecContext */*ctx*/,const enum AVPixelFormat *pix_fmts){
     const enum AVPixelFormat *p;
     AVPixelFormat ret=AV_PIX_FMT_NONE;
     std::stringstream supported_formats;
@@ -53,7 +53,7 @@ static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,const enum AVPixelFo
 // we can always copy and render these formats via OpenGL - and when we are doing SW decode
 // we most likely are on a (fast) x86 platform where we can copy those formats via CPU
 // relatively easily, at least the resolutions common in OpenHD
-static enum AVPixelFormat get_sw_format(AVCodecContext *ctx,const enum AVPixelFormat *pix_fmts){
+static enum AVPixelFormat get_sw_format(AVCodecContext */*ctx*/,const enum AVPixelFormat *pix_fmts){
     const enum AVPixelFormat *p;
     qDebug()<<"All (SW) pixel formats:"<<all_formats_to_string(pix_fmts).c_str();
     for (p = pix_fmts; *p != -1; p++) {
@@ -78,7 +78,7 @@ AVCodecDecoder::~AVCodecDecoder()
     terminate();
 }
 
-void AVCodecDecoder::init(bool primaryStream)
+void AVCodecDecoder::init(bool /*primaryStream*/)
 {
     qDebug() << "AVCodecDecoder::init()";
     m_last_video_settings=QOpenHDVideoHelper::read_config_from_settings();
@@ -147,10 +147,6 @@ void AVCodecDecoder::constant_decode()
         if(use_external_decode_service){
             dirty_generic_decode_via_external_decode_service(settings);
         }else{
-            if(settings.generic.dev_test_video_mode!=QOpenHDVideoHelper::VideoTestMode::DISABLED){
-                // file playback always goes via non-custom rtp parser (since it is not rtp)
-                do_custom_rtp=false;
-            }
             if(do_custom_rtp){
                 // Does h264 and h265 custom rtp parse, but uses avcodec for decode
                 open_and_decode_until_error_custom_rtp(settings);
@@ -172,7 +168,7 @@ int AVCodecDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std
     if(parse_time!=std::nullopt){
         const auto delay=beforeFeedFrame-parse_time.value();
         avg_parse_time.add(delay);
-        avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name,const std::string message){
+        avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/, const std::string message){
             //qDebug()<<name.c_str()<<":"<<message.c_str();
             DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
         });
@@ -227,7 +223,7 @@ int AVCodecDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std
             frame->pts=beforeFeedFrameUs;
             // display frame
             on_new_frame(frame);
-            avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name,const std::string message){
+            avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/,const std::string message){
                 //qDebug()<<name.c_str()<<":"<<message.c_str();
                 DecodingStatistcs::instance().set_decode_time(message.c_str());
             });
@@ -281,7 +277,7 @@ bool AVCodecDecoder::feed_rtp_frame_if_available()
             // parsing delay
             const auto delay=std::chrono::steady_clock::now()-frame->get_nal().creationTime;
             avg_parse_time.add(delay);
-            avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name,const std::string message){
+            avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/,const std::string message){
                 //qDebug()<<name.c_str()<<":"<<message.c_str();
                 DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
             });
@@ -325,7 +321,7 @@ void AVCodecDecoder::fetch_frame_or_feed_input_packet(){
             avg_decode_time.add(std::chrono::microseconds(delay_us));
             // display frame
             on_new_frame(frame);
-            avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name,const std::string message){
+            avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/,const std::string message){
                  //qDebug()<<name.c_str()<<":"<<message.c_str();
                  DecodingStatistcs::instance().set_decode_time(message.c_str());
             });
@@ -393,35 +389,8 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
         stream_config=settings.secondary_stream_config;
     }
     std::string in_filename="";
-    if(settings.generic.dev_test_video_mode==QOpenHDVideoHelper::VideoTestMode::DISABLED){
-        in_filename=QOpenHDVideoHelper::get_udp_rtp_sdp_filename(stream_config);
-        //in_filename="rtp://192.168.0.1:5600";
-    }else{
-        if(settings.generic.dev_enable_custom_pipeline){
-            in_filename=settings.generic.dev_custom_pipeline;
-        }else{
-            // For testing, I regulary change the filename(s) and recompile
-            const bool consti_testing=false;
-            if(consti_testing){
-                if(stream_config.video_codec==QOpenHDVideoHelper::VideoCodecH264){
-                     //in_filename="/tmp/x_raw_h264.h264";
-                    in_filename="/home/consti10/Desktop/hello_drmprime/in/rpi_1080.h264";
-                    //in_filename="/home/consti10/Desktop/hello_drmprime/in/rv_1280x720_green_white.h264";
-                    //in_filename="/home/consti10/Desktop/hello_drmprime/in/Big_Buck_Bunny_1080_10s_1MB_h264.mp4";
-                }else if(stream_config.video_codec==QOpenHDVideoHelper::VideoCodecH265){
-                      //in_filename="/tmp/x_raw_h265.h265";
-                    in_filename="/home/consti10/Desktop/hello_drmprime/in/jetson_test.h265";
-                    //in_filename="/home/consti10/Desktop/hello_drmprime/in/Big_Buck_Bunny_1080_10s_1MB_h265.mp4";
-                }else{
-                   in_filename="/home/consti10/Desktop/hello_drmprime/in/uv_640x480.mjpeg";
-                   //in_filename="/home/consti10/Desktop/hello_drmprime/in/Big_Buck_Bunny_1080.mjpeg";
-                }
-            }else{
-                in_filename=QOpenHDVideoHelper::get_default_openhd_test_file(stream_config.video_codec);
-            }
+    in_filename=QOpenHDVideoHelper::get_udp_rtp_sdp_filename(stream_config);
 
-        }
-    }
     av_log_set_level(AV_LOG_TRACE);
 
     // These options are needed for using the foo.sdp (rtp streaming)
@@ -642,12 +611,8 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
             //qDebug()<<"Packet:"<<StringHelper::vectorAsString(as_buff).c_str()<<"\n";
 
             if (video_stream == packet.stream_index){
-            //if(true){
-                int limitedFrameRate=settings.generic.dev_limit_fps_on_test_file;
-                if(settings.generic.dev_test_video_mode==QOpenHDVideoHelper::VideoTestMode::DISABLED){
-                    // never limit the fps on decode when doing live streaming !
-                    limitedFrameRate=-1;
-                }
+                // never limit the fps on decode when doing live streaming !
+                int limitedFrameRate=-1;
                 if(limitedFrameRate>0){
                     const long frameDeltaNs=1000*1000*1000 / limitedFrameRate;
                     while (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-lastFrame).count()<frameDeltaNs){
@@ -657,12 +622,6 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
                 }
                 ret = decode_and_wait_for_frame(&packet);
                 nFeedFrames++;
-                if(limitedFrameRate>0){
-                    const uint64_t runTimeMs=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-decodingStart).count();
-                    const double runTimeS=runTimeMs/1000.0f;
-                    const double fps=runTimeS==0 ? 0 : nFeedFrames/runTimeS;
-                    //qDebug()<<"Fake fps:"<<fps;
-                }
             }
         }
          av_packet_unref(&packet);

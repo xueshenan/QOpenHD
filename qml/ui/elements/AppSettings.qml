@@ -36,16 +36,10 @@ Settings {
     property int qopenhd_primary_video_codec: 0 //0==h264,1==h265,2==MJPEG, other (error) default to h264
     property bool qopenhd_primary_video_force_sw: false
 
-    // enably a test video source instead of decoding actual video data, if supported by the platform
-    // 0 = disabled
-    // 1 = raw video
-    // 2 = raw vide encode and then decode
-    property int dev_test_video_mode:0 // 0 is disabled
     // When this one is set to true, we read a file (where you can then write your custom rx gstreamer pipeline
     // that ends with qmlglsink )
     property bool dev_enable_custom_pipeline: false
-    // only for ffmpeg
-    property int dev_limit_fps_on_test_file: -1
+
     property bool dev_draw_alternating_rgb_dummy_frames: false;
     // r.n only works on h264 / h265 and on select video stream(s)
     // does not work on mjpeg, but as far as I can see, mjpeg doesn't suffer from the "one frame buffering" issue in avcodec

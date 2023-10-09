@@ -35,4 +35,3 @@ void DecodingStatistcs::util_set_primary_stream_frame_format(std::string format,
     ss<<format<<" "<<width_px<<"x"<<height_px;
     set_primary_stream_frame_format(ss.str().c_str());
 }
-
