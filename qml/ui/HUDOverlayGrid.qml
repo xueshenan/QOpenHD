@@ -96,12 +96,8 @@ Item {
         id: flight_mah_km
     }
 
-
     VideoBitrateWidgetPrimary {
         id: bitrate1
-    }
-    VideoBitrateWidgetSecondary {
-        id: bitrate2
     }
 
     // exp

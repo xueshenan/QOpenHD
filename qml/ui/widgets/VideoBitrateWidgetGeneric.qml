@@ -14,26 +14,23 @@ BaseWidget {
     width: 112
     height: 48
 
-    property bool m_is_for_primary_camera: true
-
-    widgetIdentifier: m_is_for_primary_camera ? "bitrate_widget" : "bitrate_widget2"
-    bw_verbose_name: m_is_for_primary_camera ? "VIDEO BITRATE CAM1" : "VIDEO BITRATE CAM2"
+    widgetIdentifier: "bitrate_widget"
+    bw_verbose_name: "VIDEO BITRATE CAM"
 
     defaultAlignment: 1
     defaultXOffset: 224
-    defaultYOffset: m_is_for_primary_camera ? 0 : 50
+    defaultYOffset: 0
     defaultHCenter: false
     defaultVCenter: false
-
 
     hasWidgetDetail: true
     hasWidgetAction: true
     widgetActionHeight: 400
 
-    property var m_camera_stream_model: m_is_for_primary_camera ? _cameraStreamModelPrimary : _cameraStreamModelSecondary
+    property var m_camera_stream_model: _cameraStreamModelPrimary
 
     // param - so therefore might not be always synchronized
-    property string m_curr_video_format:  m_is_for_primary_camera ? _cameraStreamModelPrimary.curr_set_video_format : _cameraStreamModelSecondary.curr_set_video_format
+    property string m_curr_video_format: _cameraStreamModelPrimary.curr_set_video_format
 
 
     function bitrate_color(curr_set_and_measured_bitrate_mismatch){
@@ -46,20 +43,11 @@ BaseWidget {
     }
 
     function set_camera_resolution(resolution_str){
-        if(m_is_for_primary_camera){
-           var success= _airCameraSettingsModel.set_param_video_resolution_framerate(resolution_str)
-            if(!success){
-                _hudLogMessagesModel.add_message_warning("Cannot change camera 1 resolutin");
-            }else{
-                m_curr_video_format=resolution_str;
-            }
+        var success= _airCameraSettingsModel.set_param_video_resolution_framerate(resolution_str)
+        if(!success){
+            _hudLogMessagesModel.add_message_warning("Cannot change camera 1 resolutin");
         }else{
-            var success= _airCameraSettingsModel2.set_param_video_resolution_framerate(resolution_str)
-             if(!success){
-                _hudLogMessagesModel.add_message_warning("Cannot change camera 2 resolutin");
-            }else{
-                m_curr_video_format=resolution_str;
-            }
+            m_curr_video_format=resolution_str;
         }
     }
 
@@ -68,7 +56,6 @@ BaseWidget {
 
 
     widgetDetailComponent: ScrollView {
-
         contentHeight: idBaseWidgetDefaultUiControlElements.height
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
         clip: true
@@ -81,7 +68,6 @@ BaseWidget {
     //---------------------------ACTION WIDGET COMPONENT BELOW-----------------------------
 
     widgetActionComponent: ScrollView{
-
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
         clip: true
 
