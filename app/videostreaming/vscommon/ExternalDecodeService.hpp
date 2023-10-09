@@ -100,9 +100,6 @@ void decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamCon
     qDebug()<<"dirty_generic_decode_via_external_decode_service begin";
     // this is always for primary video, unless switching is enabled
     auto stream_config=settings.primary_stream_config;
-    if(settings.generic.qopenhd_switch_primary_secondary){
-        stream_config=settings.secondary_stream_config;
-    }
     // Stop any still running service (just in case there is one)
     stop_all_services();
 

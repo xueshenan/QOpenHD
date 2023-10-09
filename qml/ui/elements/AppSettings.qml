@@ -24,11 +24,6 @@ Settings {
     // Configure QOpenHD for dualcam usage (enable disable secondary video and its settings)
     property int dev_qopenhd_n_cameras:1
 
-    // Inside QOpenHD, swap primary and secondary camera - on platforms that only are capable of showing one video stream,
-    // this can be used to switch between 2 different video feeds
-    // When the app is started, this value is automatically reset to false
-    property bool qopenhd_switch_primary_secondary: false
-
     // Video decode settings, per primary / secondary video
     property int qopenhd_primary_video_rtp_input_port: 5600
     property string qopenhd_primary_video_rtp_input_ip: "127.0.0.1"

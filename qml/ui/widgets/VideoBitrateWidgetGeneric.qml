@@ -221,21 +221,6 @@ BaseWidget {
                     }
                 }
             }
-            /*Item{
-                id: placeholder
-                width:parent.width
-                height: 10
-            }*/
-            Item {
-                width: parent.width
-                height: 32
-                visible: !m_is_for_primary_camera
-                Button{
-                    text: "Switch primary & secondary"
-                    onClicked: settings.qopenhd_switch_primary_secondary = !settings.qopenhd_switch_primary_secondary
-                    highlighted: settings.qopenhd_switch_primary_secondary == true
-                }
-            }
         }
     }
 

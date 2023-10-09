@@ -93,10 +93,7 @@ static std::string constructGstreamerPipeline(const QOpenHDVideoHelper::VideoStr
     // QmlglSik is always for secondary video -
     // unless the user switched them around
 
-    auto stream_config=config.secondary_stream_config;
-    if(config.generic.qopenhd_switch_primary_secondary){
-       stream_config=config.primary_stream_config;
-    }
+    auto stream_config=config.primary_stream_config;
     std::stringstream ss;
 
     ss<<"udpsrc port="<<stream_config.udp_rtp_input_port<<" ";

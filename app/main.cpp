@@ -233,7 +233,6 @@ int main(int argc, char *argv[]) {
             QRenderStats::instance().set_display_width_height(screen->size().width(),screen->size().height());
         }
     }
-    QOpenHDVideoHelper::reset_qopenhd_switch_primary_secondary();
 
 #if defined(__ios__)
     auto applePlatform = ApplePlatform::instance();

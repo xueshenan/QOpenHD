@@ -63,7 +63,6 @@ struct GenericVideoSettings{
     // On embedded devices, video is commonly rendered on a special surface, independent of QOpenHD
     // r.n only the rpi mmal impl. supports proper video rotation
     int extra_screen_rotation=0;
-    bool qopenhd_switch_primary_secondary=false;
 
     // 2 configs are equal if all members are exactly the same.
     bool operator==(const GenericVideoSettings &o) const {
@@ -73,8 +72,7 @@ struct GenericVideoSettings{
                this->dev_feed_incomplete_frames_to_decoder == o.dev_feed_incomplete_frames_to_decoder &&
                this->dev_rpi_use_external_omx_decode_service==o.dev_rpi_use_external_omx_decode_service &&
                this->dev_always_use_generic_external_decode_service==o.dev_always_use_generic_external_decode_service &&
-               this->extra_screen_rotation == o.extra_screen_rotation &&
-               this->qopenhd_switch_primary_secondary == o.qopenhd_switch_primary_secondary;
+               this->extra_screen_rotation == o.extra_screen_rotation;
      }
     bool operator !=(const GenericVideoSettings &o) const {
         return !(*this==o);
@@ -108,11 +106,9 @@ struct VideoStreamConfigXX{
 struct VideoStreamConfig{
     GenericVideoSettings generic;
     VideoStreamConfigXX primary_stream_config;
-    VideoStreamConfigXX secondary_stream_config;
     bool operator==(const VideoStreamConfig &o) const {
         return this->generic == o.generic &&
-               this->primary_stream_config==o.primary_stream_config &&
-               this->secondary_stream_config==o.secondary_stream_config;
+               this->primary_stream_config==o.primary_stream_config;
     }
     bool operator !=(const VideoStreamConfig &o) const {
         return !(*this==o);
@@ -120,7 +116,7 @@ struct VideoStreamConfig{
 };
 
 
-static VideoStreamConfigXX read_from_settingsXX(bool is_primary){
+static VideoStreamConfigXX read_from_settingsXX() {
     QSettings settings;
     QOpenHDVideoHelper::VideoStreamConfigXX _videoStreamConfig;
 
@@ -155,7 +151,6 @@ static GenericVideoSettings read_generic_from_settings(){
     //
     _videoStreamConfig.dev_rpi_use_external_omx_decode_service=settings.value("dev_rpi_use_external_omx_decode_service", true).toBool();
     _videoStreamConfig.dev_always_use_generic_external_decode_service=settings.value("dev_always_use_generic_external_decode_service", false).toBool();
-    _videoStreamConfig.qopenhd_switch_primary_secondary=settings.value("qopenhd_switch_primary_secondary", false).toBool();
     _videoStreamConfig.extra_screen_rotation=get_display_rotation();
     // QML text input sucks, so we read a file. Not ideal, but for testing only anyways
     {
@@ -174,29 +169,12 @@ static GenericVideoSettings read_generic_from_settings(){
     //_videoStreamConfig.dev_custom_pipeline=settings.value("dev_custom_pipeline","").toString().toStdString();
     return _videoStreamConfig;
 }
+
 static VideoStreamConfig read_config_from_settings(){
     VideoStreamConfig ret;
     ret.generic=read_generic_from_settings();
-    ret.primary_stream_config=read_from_settingsXX(true);
-    ret.secondary_stream_config=read_from_settingsXX(false);
+    ret.primary_stream_config=read_from_settingsXX();
     return ret;
-}
-
-
-
-// For OpenHD images, these files are copied over by the image builder and therefore can
-// be used for testing / validation
-static std::string get_default_openhd_test_file(const VideoCodec video_codec){
-    std::stringstream in_filename;
-    in_filename<<"/usr/local/share/testvideos/";
-    if(video_codec==QOpenHDVideoHelper::VideoCodecH264){
-        in_filename<<"rpi_1080.h264";
-    }else if(video_codec==QOpenHDVideoHelper::VideoCodecH265){
-        in_filename<<"jetson_test.h265";
-    }else{
-       in_filename<<"uv_640x480.mjpeg";
-    }
-    return in_filename.str();
 }
 
 // FFMPEG needs a ".sdp" file to do rtp udp h264,h265 or mjpeg
@@ -255,15 +233,6 @@ static void set_qopenhd_camera_video_codec(bool /*secondary*/,int codec){
     QSettings settings;
     settings.setValue("qopenhd_primary_video_codec",(int)codec);
 }
-
-// We set qopenhd switch primary and secondary to false when started -
-// This way, we avoid confusion where an user might have switched, then disabled dualcam,
-// and is now getting "no video" since there is no secondary camera
-static void reset_qopenhd_switch_primary_secondary() {
-    QSettings settings;
-    settings.setValue("qopenhd_switch_primary_secondary",false);
-}
-
 
 }
 #endif // QOPENHDVIDEOHELPER_H

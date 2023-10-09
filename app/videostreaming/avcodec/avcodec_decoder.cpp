@@ -121,9 +121,7 @@ void AVCodecDecoder::constant_decode()
         const auto settings = QOpenHDVideoHelper::read_config_from_settings();
         // this is always for primary video, unless switching is enabled
         auto stream_config=settings.primary_stream_config;
-        if(settings.generic.qopenhd_switch_primary_secondary){
-            stream_config=settings.secondary_stream_config;
-        }
+
          bool do_custom_rtp=settings.generic.dev_use_low_latency_parser_when_possible;
          if(stream_config.video_codec==QOpenHDVideoHelper::VideoCodecMJPEG){
              // we got no support for mjpeg in our custom rtp parser
@@ -385,9 +383,6 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
 {
     // this is always for primary video, unless switching is enabled
     auto stream_config=settings.primary_stream_config;
-    if(settings.generic.qopenhd_switch_primary_secondary){
-        stream_config=settings.secondary_stream_config;
-    }
     std::string in_filename="";
     in_filename=QOpenHDVideoHelper::get_udp_rtp_sdp_filename(stream_config);
 
@@ -584,7 +579,7 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
     }
     AVPacket packet;
     // actual decoding and dump the raw data
-    const auto decodingStart=std::chrono::steady_clock::now();
+    // const auto decodingStart=std::chrono::steady_clock::now();
     int nFeedFrames=0;
     auto lastFrame=std::chrono::steady_clock::now();
     reset_before_decode_start();
@@ -648,9 +643,6 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
 {
     // this is always for primary video, unless switching is enabled
     auto stream_config=settings.primary_stream_config;
-    if(settings.generic.qopenhd_switch_primary_secondary){
-        stream_config=settings.secondary_stream_config;
-    }
 
     // This thread pulls frame(s) from the rtp decoder and therefore should have high priority
     SchedulingHelper::setThreadParamsMaxRealtime();
