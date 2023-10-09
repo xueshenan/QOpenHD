@@ -380,9 +380,6 @@ Settings {
     // FC discovery - annoying mavsdk
     property bool dirty_enable_mavlink_fc_sys_id_check: false
 
-    property int custom_cursor_type: 0
-    property int custom_cursor_scale: 1 // arbitrary scale values - higher == bigger,
-
     // experimental - mavlink via TCP
     property bool dev_mavlink_via_tcp: false
     property string dev_mavlink_tcp_ip: "0.0.0.0"

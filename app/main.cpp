@@ -226,8 +226,7 @@ int main(int argc, char *argv[]) {
     //QLoggingCategory::setFilterRules("qt.qpa.egl*=true");
 
     QApplication app(argc, argv);
-    // Customize cursor if needed
-    QOpenHD::instance().customize_cursor_from_settings();
+
     {
         QScreen* screen=app.primaryScreen();
         if(screen){
