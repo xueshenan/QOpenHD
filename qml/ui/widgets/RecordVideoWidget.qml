@@ -16,9 +16,6 @@ BaseWidget {
 
     function get_width(){
         if(settings.show_minimal_record_widget){
-            if(settings.dev_qopenhd_n_cameras>1){
-                return 35*2;
-            }
             return 35;
         }
         return 150;
@@ -46,7 +43,7 @@ BaseWidget {
     hasWidgetDetail: true
     hasWidgetAction: true
     widgetActionWidth: 250
-    widgetActionHeight: (settings.dev_qopenhd_n_cameras > 1) ? 230 : 130
+    widgetActionHeight: 130
     widgetDetailWidth:275
     widgetDetailHeight:175
 
@@ -225,51 +222,6 @@ BaseWidget {
                     }
                 }
             }
-            Text {
-                text: qsTr("(Air) Record Camera 2");
-                color: settings.color_text
-                elide: Text.ElideNone
-                wrapMode: Text.NoWrap
-                horizontalAlignment: Text.AlignLeft
-                font.pixelSize: settings.recordTextSize
-                font.family: settings.font_text
-                style: Text.Outline
-                styleColor: settings.color_glow
-                visible: settings.dev_qopenhd_n_cameras > 1
-            }
-            Item{
-                width: parent.width
-                height: 50
-                //color:"green"
-                visible: settings.dev_qopenhd_n_cameras > 1
-                GridLayout{
-                    width: parent.width
-                    height: parent.height
-                    rows: 1
-                    columns: 3
-                    Button{
-                        text: "OFF"
-                        onClicked: {
-                            try_set_recording_mode(2,0)
-                        }
-                        highlighted: m_camera2_recording_mode==0
-                    }
-                    Button{
-                        text: "ON"
-                        onClicked: {
-                            try_set_recording_mode(2,1)
-                        }
-                        highlighted: m_camera2_recording_mode==1
-                    }
-                    Button{
-                        text: "AUTO"
-                        onClicked: {
-                            try_set_recording_mode(2,2)
-                        }
-                        highlighted: m_camera2_recording_mode==2
-                    }
-                }
-            }
         }
     }
 
@@ -308,22 +260,6 @@ BaseWidget {
             style: Text.Outline
             styleColor: settings.color_glow
             visible: true
-        }
-        Text {
-            id:record_status_cam2
-            text: "CAM2"
-            color: (m_camera2_is_currently_recording == true) ? "green" : "red"
-            anchors.fill: parent
-            anchors.leftMargin: 140*settings.recordTextSize/14
-            anchors.topMargin: 5*settings.recordTextSize/12
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideNone
-            wrapMode: Text.NoWrap
-            font.pixelSize: settings.recordTextSize
-            font.family: settings.font_text
-            style: Text.Outline
-            styleColor: settings.color_glow
-            visible: settings.dev_qopenhd_n_cameras > 1
         }
         Text {
             text: qsTr("Free Space");
@@ -379,22 +315,6 @@ BaseWidget {
             style: Text.Outline
             styleColor: settings.color_glow
             visible: true
-        }
-        Text {
-            id:record_status_cam2_min
-            text: "  \uf03d"
-            font.family: "Font Awesome 5 Free"
-            color: (m_camera2_is_currently_recording == true) ? "red" : "white"
-            anchors.fill: parent
-            anchors.leftMargin: 25*settings.recordTextSize/14
-            anchors.topMargin: 5*settings.recordTextSize/12
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideNone
-            wrapMode: Text.NoWrap
-            font.pixelSize: settings.recordTextSize*1.5
-            style: Text.Outline
-            styleColor: settings.color_glow
-            visible: settings.dev_qopenhd_n_cameras > 1
         }
         Text {
             id:airVideoSpaceLeft_min

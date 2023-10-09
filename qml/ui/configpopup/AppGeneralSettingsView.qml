@@ -164,46 +164,6 @@ ScrollView {
                 }
             }
 
-            // exp
-            Rectangle {
-                width: parent.width
-                height: rowHeight
-                color: (Positioner.index % 2 == 0) ? "#8cbfd7f3" : "#00000000"
-                visible: true
-                Text {
-                    text: qsTr("N Cameras to controll")
-                    font.weight: Font.Bold
-                    font.pixelSize: 13
-                    anchors.leftMargin: 8
-                    verticalAlignment: Text.AlignVCenter
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 224
-                    height: elementHeight
-                    anchors.left: parent.left
-                }
-
-                SpinBox {
-                    id: dev_qopenhd_n_cameras_spinbox
-                    height: elementHeight
-                    width: 210
-                    font.pixelSize: 14
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    from: 1
-                    to: 2
-                    stepSize: 1
-                    anchors.rightMargin: Qt.inputMethod.visible ? 78 : 18
-
-                    value: settings.dev_qopenhd_n_cameras
-                    onValueChanged: {
-                        var actually_changed=settings.dev_qopenhd_n_cameras!=value
-                        settings.dev_qopenhd_n_cameras = value
-                        if(actually_changed){
-                            _restartqopenhdmessagebox.show()
-                        }
-                    }
-                }
-            }
             SettingBaseElement{
                 m_short_description: "Hide identity offset lattitude"
                 m_long_description: "Set this to a random value only you know to hide lat identity"

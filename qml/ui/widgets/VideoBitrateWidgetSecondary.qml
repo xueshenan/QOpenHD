@@ -10,6 +10,5 @@ import OpenHD 1.0
 
 VideoBitrateWidgetGeneric{
     m_is_for_primary_camera: false
-    visible: settings.show_bitrate && settings.dev_qopenhd_n_cameras==2
-
+    visible: settings.show_bitrate
 }
