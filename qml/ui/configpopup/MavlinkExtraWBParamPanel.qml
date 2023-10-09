@@ -19,16 +19,13 @@ Rectangle{
     width: parent.width
     height: parent.height
 
-    //color: "transparent"
-    //color: settings.screen_settings_openhd_parameters_transparent ? "transparent" : "white"
-    //opacity: settings.screen_settings_openhd_parameters_transparent ? 0.2 : 1
-
     // https://stackoverflow.com/questions/41991438/how-do-i-find-a-particular-listelement-inside-a-listmodel-in-qml
     // For the models above (model with value) try to find the index of the first  item where model[i].value===value
     function find_index(model,value){
         for(var i = 0; i < model.count; ++i) if (model.get(i).value===value) return i
         return -1
     }
+
     // try and update the combobox to the retrieved value(value != index)
     function update_combobox(_combobox,_value){
         var _index=find_index(_combobox.model,_value)
@@ -173,6 +170,7 @@ Only enable if you want to quickly change your ground unit's channel width to th
                     ListElement {title: "20MHz (default)"; value: 20}
                     ListElement {title: "40MHz (rtl8812au only)"; value: 40}
                 }
+
                 Text{
                     width: parent.width
                     height: rowHeight / 2
@@ -231,7 +229,6 @@ Only enable if you want to quickly change your ground unit's channel width to th
                                 if(_res>=0){
                                     buttonSwitchFreq.enabled=true
                                 }
-                                //console.log("Got ",_res)
                                 update_combobox(comboBoxFreq,_res);
                             }
                         }

@@ -16,9 +16,6 @@ Rectangle {
     width: parent.width
     height: parent.height
 
-    //Layout.fillHeight: true
-    //Layout.fillWidth: true
-
     property int rowHeight: 64
     property int elementHeight: 48
     property int elementComboBoxWidth: 300
@@ -34,11 +31,7 @@ Rectangle {
               text: qsTr("WB Link")
           }
           TabButton {
-              text: qsTr("Air Camera 1")
-          }
-          TabButton {
-              text: qsTr("Air Camera 2")
-              enabled: settings.dev_qopenhd_n_cameras>1
+              text: qsTr("Air Camera")
           }
           TabButton {
               text: qsTr("Air")
@@ -60,20 +53,10 @@ Rectangle {
           MavlinkExtraWBParamPanel{
               id: xX_WBLinkSettings
           }
-        //   MavlinkSetupPiCameraPanel{
-        //       id: x1_WBPiCameraSettings
-        //   }
           MavlinkParamPanel{
               id: x1_AirCameraSettingsPanel
-              m_name: "Camera1"
+              m_name: "Camera"
               m_instanceMavlinkSettingsModel: _airCameraSettingsModel
-              m_instanceCheckIsAvlie: _ohdSystemAir
-          }
-          // exp
-          MavlinkParamPanel{
-              id: x1_AirCameraSettingsPanel2
-              m_name: "Camera2"
-              m_instanceMavlinkSettingsModel: _airCameraSettingsModel2
               m_instanceCheckIsAvlie: _ohdSystemAir
           }
           MavlinkParamPanel{
