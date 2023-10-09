@@ -90,10 +90,6 @@ Item {
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        /*background: Rectangle {
-            color: "gray"
-            border.color: "black"
-        }*/
         Pane{
             ColumnLayout {
                 anchors.fill: parent

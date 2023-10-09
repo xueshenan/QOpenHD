@@ -31,7 +31,9 @@ ApplicationWindow {
 
     minimumWidth: 480
     minimumHeight: 320
+
     title: qsTr("QOpenHD EVO")
+
     // Transparent background is needed when the video is not rendered via (OpenGL) inside QT,
     // but rather done independently by using a pipeline that directly goes to the HW composer (e.g. mmal on pi).
     //color: "transparent" //Consti10 transparent background
@@ -84,7 +86,7 @@ ApplicationWindow {
                 if(QOPENHD_ENABLE_GSTREAMER_QMLGLSINK){
                     return "../video/MainVideoGStreamer.qml";
                 }
-                console.warn("No primary video implementation")
+                console.warn("No video stream implementation")
                 return ""
             }
         }
@@ -166,34 +168,5 @@ ApplicationWindow {
                 grabPermissions: PointerHandler.CanTakeOverFromAnything
             }
         }
-
-        /*Rectangle {
-            width: 800
-            height: 600
-            color: "red"
-            z: 1
-
-            MediaPlayer {
-                id: player
-                source: "gst-pipeline: videotestsrc ! videoconvert ! qtvideosink"
-                //source: "gst-pipeline: udpsrc port=5600 caps = \"application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=(int)96\" ! rtph264depay ! decodebin ! qtvideosink"
-                autoPlay: true
-            }
-
-            VideoOutput {
-                id: videoOutput
-                source: player
-                anchors.fill: parent
-            }
-        }*/
     }
 }
-
-/*##^##
-Designer {
-    D{i:6;anchors_y:8}D{i:7;anchors_y:32}D{i:8;anchors_y:32}D{i:9;anchors_y:8}D{i:10;anchors_y:32}
-D{i:11;anchors_y:32}D{i:12;anchors_y:11}D{i:13;anchors_y:11}D{i:14;anchors_x:62}D{i:15;anchors_x:128}
-D{i:16;anchors_x:136;anchors_y:11}D{i:17;anchors_x:82;anchors_y:8}D{i:19;anchors_y:8}
-D{i:21;anchors_y:31}D{i:22;anchors_y:8}D{i:23;anchors_y:11}D{i:24;anchors_y:32}
-}
-##^##*/

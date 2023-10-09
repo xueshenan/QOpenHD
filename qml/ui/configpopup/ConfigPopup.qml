@@ -404,55 +404,6 @@ Rectangle {
                 }
             }
 
-            // FC Setup
-            /*Item {
-                id: fcSetup
-                height: left_sidebar_elements_height
-                width: parent.width
-                Button{
-                    id: fcSetupButton
-                    height: parent.height
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
-
-                    Text {
-                        id: fcSetupIcon
-                        text: "\uf05a"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.family: "Font Awesome 5 Free"
-                        font.pixelSize: 18
-                        height: parent.height
-                        width: 24
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        color: "#dde4ed"
-                    }
-
-                    Text {
-                        id: fcSetupButtonText
-                        text: qsTr("FC Setup")
-                        height: parent.height
-                        anchors.left: fcSetupIcon.right
-                        anchors.leftMargin: 6
-                        font.pixelSize: 15
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                        color: mainStackLayout.currentIndex == 6 ? "#33aaff" : "#dde4ed"
-                    }
-                    background: Rectangle {
-                        opacity: .5
-                        radius: 5
-                        //later this can be changed to focus
-                        color: fcSetupButton.hovered ? "grey" : "transparent" // I update background color by this
-                    }
-                    onClicked: {
-                        mainStackLayout.currentIndex = 6
-                    }
-                }
-            }*/
-
             // Developer stats
             Item {
                 height: left_sidebar_elements_height
@@ -547,58 +498,6 @@ Rectangle {
                         }
                 }
             }
-
-            // Credits and copyright
-            Item {
-                id: credits
-                visible: true
-                height: left_sidebar_elements_height
-                width: parent.width
-                Button{
-                    id: creditsBtn
-
-                    height: parent.height
-                    width: parent.width
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
-
-                    Text {
-                        id: creditsIcon
-                        text: "\uf005"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        font.family: "Font Awesome 5 Free"
-                        font.pixelSize: 18
-                        height: parent.height
-                        width: 24
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        color: "#dde4ed"
-                    }
-
-                    Text {
-                        id: creditsButton
-                        height: parent.height
-                        anchors.left: creditsIcon.right
-                        anchors.leftMargin: 6
-
-                        text: qsTr("Credits")
-                        font.pixelSize: 15
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                        color: mainStackLayout.currentIndex == 8 ? "#33aaff" : "#dde4ed"
-                    }
-                    background: Rectangle {
-                        opacity: .5
-                        radius: 5
-                        //later this can be changed to focus
-                        color: creditsBtn.hovered ? "grey" : "transparent" // I update background color by this
-                    }
-                    onClicked: {
-                        mainStackLayout.currentIndex = 8
-                    }
-                }
-            }
         }
     }
 
@@ -648,11 +547,5 @@ Rectangle {
         AppDeveloperStatsPanel {
             id: appDeveloperStatsPanel
         }
-        
-        // This Credits functions as a copyrighted declaration. Any unpermitted alteration, suppression, or eradication of this page is expressly forbidden unless granted explicit authorization by the OpenHD development team.
-        Credits {
-            id: creditspanel
-        }
     }
 }
-
