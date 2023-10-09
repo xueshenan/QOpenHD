@@ -320,12 +320,9 @@ int main(int argc, char *argv[]) {
 #ifdef QOPENHD_GSTREAMER_PRIMARY_VIDEO
     engine.rootContext()->setContextProperty("_primary_video_gstreamer_qml", &GstQmlGlSinkStream::instancePrimary());
 #endif
-#ifdef QOPENHD_GSTREAMER_SECONDARY_VIDEO
-    engine.rootContext()->setContextProperty("_secondary_video_gstreamer_qml", &GstQmlGlSinkStream::instanceSecondary());
-#endif
-#else
     engine.rootContext()->setContextProperty("QOPENHD_ENABLE_GSTREAMER_QMLGLSINK", QVariant(false));
 #endif
+
 #ifdef QOPENHD_ENABLE_VIDEO_VIA_AVCODEC
     // QT doesn't have the define(s) from c++
     engine.rootContext()->setContextProperty("QOPENHD_ENABLE_VIDEO_VIA_AVCODEC", QVariant(true));
@@ -347,7 +344,6 @@ int main(int argc, char *argv[]) {
 #else
      engine.rootContext()->setContextProperty("QOPENHD_ENABLE_VIDEO_VIA_ANDROID", QVariant(false));
 #endif
-    //GstRtpAudioPlayer::instance().start_playing();
 // Platform - dependend video end  -----------------------------------------------------------------
 
     engine.rootContext()->setContextProperty("_decodingStatistics",&DecodingStatistcs::instance());

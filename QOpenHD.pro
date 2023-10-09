@@ -193,7 +193,6 @@ DISTFILES += \
     app/videostreaming/README.txt \
     app/videostreaming/gst_qmlglsink/gst_video.pri \
     app/videostreaming/vscommon/vscommon.pri \
-    app/vs_android/videostreamingandroid.pri \
     extra_build_qmake.sh \
     lib/h264nal/h264nal.pri \
     qml/qtquickcontrols2.conf \
@@ -257,7 +256,6 @@ AndroidBuild {
     QT += androidextras
 
     include(app/videostreaming/gstreamer/gst_video.pri)
-    include(app/videostreaming/android/videostreamingandroid.pri)
     # needed to build android from windows, but not from linux
     QMAKE_PROJECT_DEPTH = 0
 }

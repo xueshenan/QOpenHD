@@ -36,11 +36,6 @@ Settings {
     property int qopenhd_primary_video_codec: 0 //0==h264,1==h265,2==MJPEG, other (error) default to h264
     property bool qopenhd_primary_video_force_sw: false
 
-    property int qopenhd_secondary_video_rtp_input_port: 5601
-    property string qopenhd_secondary_video_rtp_input_ip: "127.0.0.1"
-    property int qopenhd_secondary_video_codec: 0
-    property bool qopenhd_secondary_video_force_sw: false
-
     // enably a test video source instead of decoding actual video data, if supported by the platform
     // 0 = disabled
     // 1 = raw video

@@ -20,13 +20,9 @@ ApplicationWindow {
     visible: true
 
 
-    //property int m_window_width: 1280
-    //property int m_window_height: 720
-    property int m_window_width: 850 // This is 480p 16:9
-    property int m_window_height: 480
+    property int m_window_width: 1280
+    property int m_window_height: 720
 
-    //width: 850
-    //height: 480
     width: (settings.general_screen_rotation == 90 || settings.general_screen_rotation == 270) ? m_window_height : m_window_width
     height: (settings.general_screen_rotation == 90 || settings.general_screen_rotation == 270) ? m_window_width : m_window_height
 
@@ -90,27 +86,6 @@ ApplicationWindow {
                 }
                 console.warn("No primary video implementation")
                 return ""
-            }
-        }
-
-        // Loads the proper (platform-dependent) video widget for the secondary video, if enabled.
-        // r.n we only have a gstreamer - qmlglsink implementation for it
-        Loader {
-            anchors.fill: parent
-            z: 2.0
-            anchors.bottom: parent.bottom
-            source: {
-                if(settings.dev_qopenhd_n_cameras>1){
-                    // R.N the only implementation for secondary video
-                    if (QOPENHD_ENABLE_GSTREAMER_QMLGLSINK){
-                         return "../video/SecondaryVideoGStreamer.qml";
-                    }else{
-                        console.warn("No secondary video implementation")
-                    }
-                }else{
-                    console.debug("Scondary video disabled");
-                }
-                return "";
             }
         }
 

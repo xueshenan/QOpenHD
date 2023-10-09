@@ -93,69 +93,6 @@ ScrollView {
                     onValueChanged: settings.qopenhd_primary_video_rtp_input_port = value
                 }
             }
-            SettingBaseElement{
-                m_short_description: "Video codec secondary"
-                m_long_description: "Video codec of secondary stream (pip video). Automatically fetched from OpenHD."
-                // only show to dualcam users
-                visible: settings.dev_qopenhd_n_cameras==2
-                ComboBox {
-                    id: selectVideoCodecSecondary
-                    width: 320
-                    height: elementHeight
-                    anchors.right: parent.right
-                    anchors.rightMargin: Qt.inputMethod.visible ? 96 : 36
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizonatalCenter
-                    model: itemsVideoCodec
-                    Component.onCompleted: {
-                        // out of bounds checking
-                        if(settings.qopenhd_secondary_video_codec >2 || settings.qopenhd_secondary_video_codec<0){
-                            settings.qopenhd_secondary_video_codec=0;
-                        }
-                        currentIndex = settings.qopenhd_secondary_video_codec;
-                    }
-                    onCurrentIndexChanged:{
-                        console.debug("VideoCodec:"+itemsVideoCodec.get(currentIndex).text + ", "+currentIndex)
-                        settings.qopenhd_secondary_video_codec=currentIndex;
-                    }
-                }
-            }
-
-            SettingBaseElement{
-                m_short_description: "Secondary video force SW"
-                m_long_description: "Force SW decode for secondary video stream (unless it already defaulted to sw decode). Can fix bug(s) in rare hardware incompability cases."
-                // only show to dualcam users
-                visible: settings.dev_qopenhd_n_cameras==2
-                Switch {
-                    width: 32
-                    height: elementHeight
-                    anchors.rightMargin: Qt.inputMethod.visible ? 96 : 36
-
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: settings.qopenhd_secondary_video_force_sw
-                    onCheckedChanged: settings.qopenhd_secondary_video_force_sw = checked
-                }
-            }
-            SettingBaseElement{
-                m_short_description: "Secondary video udp in port"
-                m_long_description: "UDP port where qopenhd listens for video data for the secondary video stream"
-                visible: settings.dev_qopenhd_n_cameras==2
-                SpinBox {
-                    height: elementHeight
-                    width: 210
-                    font.pixelSize: 14
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    from: 1
-                    to: 6900
-                    stepSize: 1
-                    editable: true
-                    anchors.rightMargin: Qt.inputMethod.visible ? 78 : 18
-                    value: settings.qopenhd_secondary_video_rtp_input_port
-                    onValueChanged: settings.qopenhd_secondary_video_rtp_input_port = value
-                }
-            }
 
             SettingBaseElement{
                 m_short_description: "Scale primary video to fit"
@@ -352,20 +289,6 @@ ScrollView {
                     anchors.verticalCenter: parent.verticalCenter
                     checked: settings.dev_always_use_generic_external_decode_service
                     onCheckedChanged: settings.dev_always_use_generic_external_decode_service = checked
-                }
-            }
-
-            SettingBaseElement{
-                m_short_description: "Switch primary / secondary video"
-                m_long_description: "Show secondary video in main video window & primary video in pip window (if the platform supports pip)"
-                Switch {
-                    width: 32
-                    height: elementHeight
-                    anchors.rightMargin: Qt.inputMethod.visible ? 96 : 36
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: settings.qopenhd_switch_primary_secondary
-                    onCheckedChanged: settings.qopenhd_switch_primary_secondary = checked
                 }
             }
         }

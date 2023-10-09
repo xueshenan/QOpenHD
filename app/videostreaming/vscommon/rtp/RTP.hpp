@@ -90,7 +90,7 @@ using fu_indicator_t=nalu_header_t;
 //+-+-+-+-+-+-+-+-+
 //|S|E|R|  Type   |
 //+---------------+
-typedef struct fu_header_t {
+struct fu_header_t {
     uint8_t type:   5;
     uint8_t r:      1;
     uint8_t e:      1;

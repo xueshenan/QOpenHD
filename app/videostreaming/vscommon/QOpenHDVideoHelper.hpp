@@ -15,7 +15,7 @@ namespace QOpenHDVideoHelper{
 // Must be in sync with OpenHD
 static constexpr auto kDefault_udp_rtp_input_ip_address="127.0.0.1";
 static constexpr auto kDefault_udp_rtp_input_port_primary=5600;
-static constexpr auto kDefault_udp_rtp_input_port_secondary=5601;
+static constexpr auto kDefault_udp_rtp_input_port_secondary=5600;
 
 // OpenHD supported video codecs
 typedef enum VideoCodec {
@@ -132,19 +132,13 @@ struct VideoStreamConfig{
 static VideoStreamConfigXX read_from_settingsXX(bool is_primary){
     QSettings settings;
     QOpenHDVideoHelper::VideoStreamConfigXX _videoStreamConfig;
-    if(is_primary){
-        _videoStreamConfig.udp_rtp_input_port=settings.value("qopenhd_primary_video_rtp_input_port", kDefault_udp_rtp_input_port_primary).toInt();
-        _videoStreamConfig.udp_rtp_input_ip_address=settings.value("qopenhd_primary_video_rtp_input_ip",kDefault_udp_rtp_input_ip_address).toString().toStdString();
-        const int tmp_video_codec = settings.value("qopenhd_primary_video_codec", 0).toInt();
-        _videoStreamConfig.video_codec=QOpenHDVideoHelper::intToVideoCodec(tmp_video_codec);
-        _videoStreamConfig.enable_software_video_decoder=settings.value(" qopenhd_primary_video_force_sw", 0).toBool();
-    }else{
-        _videoStreamConfig.udp_rtp_input_port=settings.value("qopenhd_secondary_video_rtp_input_port", kDefault_udp_rtp_input_port_secondary).toInt();
-        _videoStreamConfig.udp_rtp_input_ip_address=settings.value("qopenhd_secondary_video_rtp_input_ip",kDefault_udp_rtp_input_ip_address).toString().toStdString();
-        const int tmp_video_codec = settings.value("qopenhd_secondary_video_codec", 0).toInt();
-        _videoStreamConfig.video_codec=QOpenHDVideoHelper::intToVideoCodec(tmp_video_codec);
-        _videoStreamConfig.enable_software_video_decoder=settings.value(" qopenhd_secondary_video_force_sw", 0).toBool();
-    }
+
+    _videoStreamConfig.udp_rtp_input_port=settings.value("qopenhd_primary_video_rtp_input_port", kDefault_udp_rtp_input_port_primary).toInt();
+    _videoStreamConfig.udp_rtp_input_ip_address=settings.value("qopenhd_primary_video_rtp_input_ip",kDefault_udp_rtp_input_ip_address).toString().toStdString();
+    const int tmp_video_codec = settings.value("qopenhd_primary_video_codec", 0).toInt();
+    _videoStreamConfig.video_codec=QOpenHDVideoHelper::intToVideoCodec(tmp_video_codec);
+    _videoStreamConfig.enable_software_video_decoder=settings.value(" qopenhd_primary_video_force_sw", 0).toBool();
+
     return _videoStreamConfig;
 }
 
@@ -244,51 +238,43 @@ static void write_file_to_tmp(const std::string filename,const std::string conte
     _t << content;
     _t.close();
 }
+
 static constexpr auto kRTP_FILENAME="/tmp/rtp_custom.sdp";
 
-static void write_udp_rtp_sdp_file_to_tmp(const VideoStreamConfigXX& video_stream_config){
+static void write_udp_rtp_sdp_file_to_tmp(const VideoStreamConfigXX& video_stream_config) {
     write_file_to_tmp(kRTP_FILENAME,create_udp_rtp_sdp_file(video_stream_config));
 }
-static std::string get_udp_rtp_sdp_filename(const VideoStreamConfigXX& video_stream_config){
+static std::string get_udp_rtp_sdp_filename(const VideoStreamConfigXX& video_stream_config) {
     write_udp_rtp_sdp_file_to_tmp(video_stream_config);
     return kRTP_FILENAME;
 }
 
-static int get_qopenhd_n_cameras(){
+static int get_qopenhd_n_cameras() {
     QSettings settings;
     const int tmp = settings.value("dev_qopenhd_n_cameras", 1).toInt();
     return tmp;
 }
 
 // We autmatically (over) write the video codec once we get camera telemetry data
-static int get_qopenhd_camera_video_codec(bool secondary){
+static int get_qopenhd_camera_video_codec(bool /*secondary*/) {
     QSettings settings;
-    int codec_in_qopenhd=0;
-    if(secondary){
-        codec_in_qopenhd = settings.value("qopenhd_secondary_video_codec", 0).toInt();
-    }else{
-        codec_in_qopenhd = settings.value("qopenhd_primary_video_codec", 0).toInt();
-    }
+    int codec_in_qopenhd = settings.value("qopenhd_primary_video_codec", 0).toInt();
     return codec_in_qopenhd;
 }
-static void set_qopenhd_camera_video_codec(bool secondary,int codec){
+
+static void set_qopenhd_camera_video_codec(bool /*secondary*/,int codec){
     QSettings settings;
-    int codec_in_qopenhd=0;
-    if(secondary){
-        settings.setValue("qopenhd_secondary_video_codec",(int)codec);
-    }else{
-        settings.setValue("qopenhd_primary_video_codec",(int)codec);
-    }
+    settings.setValue("qopenhd_primary_video_codec",(int)codec);
 }
+
 // We set qopenhd switch primary and secondary to false when started -
 // This way, we avoid confusion where an user might have switched, then disabled dualcam,
 // and is now getting "no video" since there is no secondary camera
-static void reset_qopenhd_switch_primary_secondary(){
+static void reset_qopenhd_switch_primary_secondary() {
     QSettings settings;
     settings.setValue("qopenhd_switch_primary_secondary",false);
-
 }
 
-}
 
+}
 #endif // QOPENHDVIDEOHELPER_H
