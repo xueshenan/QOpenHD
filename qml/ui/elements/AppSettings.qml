@@ -295,15 +295,6 @@ Settings {
     property bool show_vertical_speed_gauge_widget: false
     property int vertical_speed_gauge_widget_max: 20
 
-
-    property bool show_wind: false
-    property bool wind_plane_copter: false //should default to plane
-    property bool wind_arrow_circle: true
-    //tumbler value had to be split into two values..
-    property double wind_tumbler_decimal: 5
-    property double wind_tumbler_tens: 13
-    property double wind_max_quad_speed: wind_tumbler_tens+(wind_tumbler_decimal*.1)
-
     // Default to false, since while really usefully for advanced flyers, not really a common OSD element
     property bool bank_angle_indicator_widget_show: false
     property bool bank_angle_indicator_widget_roll_invert: false

@@ -219,11 +219,6 @@ Item {
         id: vsgaugewidget
     }
 
-    // + 0% cpu
-    WindWidget {
-        id: windWidget
-    }
-
     // + 3% cpu
     RollWidget {
         id: rollWidget
