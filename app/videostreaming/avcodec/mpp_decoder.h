@@ -41,11 +41,6 @@ private:
     // Ccompletely restart the decoding in case an error occurs
     // or the settings changed (e.g. a switch of the video codec).
     void constant_decode();
-    // Since we are basically doing connectionless live streaming, where config data comes in regular intervals,
-    // The easiest approach here is to just "open" the stream, then decode until an error occurs
-    // and do this in a loop. The "decode until error" is needed because due to the fact that the input stream
-    // might be incomplete, we cannot quarantee that the decoder won't encounter any errors.
-    int open_and_decode_until_error(const QOpenHDVideoHelper::VideoStreamConfig settings);
     // feed one frame to the decoder, then wait until the frame is returned
     // (This gives the lowest latency on most decoders that have a "lockstep").
     // If we didn't get a frame out for X seconds after feeding a frame more than X times,
