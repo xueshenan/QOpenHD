@@ -75,16 +75,16 @@ private:
     const std::string name;
     std::chrono::steady_clock::time_point last_log{};
 public:
-    AvgCalculator(std::string name1=""):name(name1){reset();};
-    void add(const std::chrono::nanoseconds& value){
-        if(value<std::chrono::nanoseconds(0)){
+    AvgCalculator(std::string name1="") : name(name1) { reset(); }
+    void add(const std::chrono::nanoseconds& value) {
+        if (value<std::chrono::nanoseconds(0)) {
             std::cout<<"Cannot add negative value\n";
             return;
         }
-        sum+=value;
+        sum += value;
         nSamples++;
-        if(value<min){
-            min=value;
+        if (value < min) {
+            min = value;
         }
         if(value>max){
             max=value;

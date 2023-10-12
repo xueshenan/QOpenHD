@@ -14,7 +14,7 @@ QSGVideoTextureItem::QSGVideoTextureItem():
 {
     connect(this, &QQuickItem::windowChanged, this, &QSGVideoTextureItem::handleWindowChanged);
     //
-    m_av_codec_decoder=std::make_unique<AVCodecDecoder>(nullptr);
+    m_av_codec_decoder=std::make_unique<MppDecoder>(nullptr);
     m_av_codec_decoder->init(true);
 }
 
@@ -71,7 +71,6 @@ void QSGVideoTextureItem::m_QQuickWindow_beforeRenderPassRecording()
     }
     // always trigger a repaint, otherwise QT "thinks" nothing has changed since it doesn't
     // know about the OpenGL commands we do here
-    //window()->update();
     window()->update();
     //window()->requestUpdate();
 }

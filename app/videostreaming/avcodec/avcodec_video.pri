@@ -11,6 +11,7 @@ SOURCES += \
     $$PWD/QSGVideoTextureItem.cpp \
     $$PWD/gl/gl_shaders.cpp \
     $$PWD/gl/gl_videorenderer.cpp \
+    $$PWD/mpp_decoder.cpp \
     $$PWD/texturerenderer.cpp \
     $$PWD/avcodec_decoder.cpp \
 
@@ -18,6 +19,7 @@ HEADERS += \
     $$PWD/QSGVideoTextureItem.h \
     $$PWD/gl/gl_shaders.h \
     $$PWD/gl/gl_videorenderer.h \
+    $$PWD/mpp_decoder.h \
     $$PWD/texturerenderer.h \
     $$PWD/avcodec_decoder.h \
 

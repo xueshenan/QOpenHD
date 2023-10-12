@@ -1,9 +1,10 @@
-#include "avcodec_decoder.h"
-#include "qdebug.h"
-#include <QFileInfo>
+#include "mpp_decoder.h"
+
 #include <iostream>
 #include <sstream>
+#include <QFileInfo>
 
+#include "qdebug.h"
 #include "avcodec_helper.hpp"
 #include "../common/TimeHelper.hpp"
 #include "common/util_fs.h"
@@ -67,28 +68,27 @@ static enum AVPixelFormat get_sw_format(AVCodecContext */*ctx*/,const enum AVPix
 }
 
 
-AVCodecDecoder::AVCodecDecoder(QObject *parent):
+MppDecoder::MppDecoder(QObject *parent):
     QObject(parent)
 {
-    //drm_prime_out=std::make_unique<DRMPrimeOut>(1,false,false);
 }
 
-AVCodecDecoder::~AVCodecDecoder()
+MppDecoder::~MppDecoder()
 {
     terminate();
 }
 
-void AVCodecDecoder::init(bool /*primaryStream*/)
+void MppDecoder::init(bool /*primaryStream*/)
 {
-    qDebug() << "AVCodecDecoder::init()";
+    qDebug() << "MppDecoder::init()";
     m_last_video_settings=QOpenHDVideoHelper::read_config_from_settings();
     decode_thread = std::make_unique<std::thread>([this]{this->constant_decode();} );
     timer_check_settings_changed=std::make_unique<QTimer>();
-    QObject::connect(timer_check_settings_changed.get(), &QTimer::timeout, this, &AVCodecDecoder::timer_check_settings_changed_callback);
+    QObject::connect(timer_check_settings_changed.get(), &QTimer::timeout, this, &MppDecoder::timer_check_settings_changed_callback);
     timer_check_settings_changed->start(1000);
 }
 
-void AVCodecDecoder::terminate()
+void MppDecoder::terminate()
 {
     // Stop the timer, which can be done (almost) immediately (it's runnable doesn't block)
     timer_check_settings_changed->stop();
@@ -103,7 +103,7 @@ void AVCodecDecoder::terminate()
     }
 }
 
-void AVCodecDecoder::timer_check_settings_changed_callback()
+void MppDecoder::timer_check_settings_changed_callback()
 {
     const auto new_settings=QOpenHDVideoHelper::read_config_from_settings();
     if(m_last_video_settings!=new_settings){
@@ -114,7 +114,7 @@ void AVCodecDecoder::timer_check_settings_changed_callback()
     }
 }
 
-void AVCodecDecoder::constant_decode()
+void MppDecoder::constant_decode()
 {
     while(!m_should_terminate){
         qDebug()<<"Start decode";
@@ -136,9 +136,6 @@ void AVCodecDecoder::constant_decode()
             use_external_decode_service=true;
         }
         bool is_rpi=false;
-#ifdef IS_PLATFORM_RPI
-        is_rpi=true;
-#endif // IS_PLATFORM_RPI
         if(is_rpi && settings.generic.dev_rpi_use_external_omx_decode_service){
             use_external_decode_service=true;
         }
@@ -158,7 +155,7 @@ void AVCodecDecoder::constant_decode()
 }
 
 
-int AVCodecDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std::chrono::steady_clock::time_point> parse_time)
+int MppDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std::chrono::steady_clock::time_point> parse_time)
 {
     AVFrame *frame = nullptr;
     //qDebug()<<"Decode packet:"<<packet->pos<<" size:"<<packet->size<<" B";
@@ -260,14 +257,14 @@ int AVCodecDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std
     return 0;
 }
 
-int AVCodecDecoder::decode_config_data(AVPacket *packet)
+int MppDecoder::decode_config_data(AVPacket *packet)
 {
      const int ret_avcodec_send_packet = avcodec_send_packet(decoder_ctx, packet);
      return ret_avcodec_send_packet;
 }
 
 
-bool AVCodecDecoder::feed_rtp_frame_if_available()
+bool MppDecoder::feed_rtp_frame_if_available()
 {
     auto frame=m_rtp_receiver->get_next_frame();
     if(frame){
@@ -293,7 +290,7 @@ bool AVCodecDecoder::feed_rtp_frame_if_available()
     return false;
 }
 
-void AVCodecDecoder::fetch_frame_or_feed_input_packet(){
+void MppDecoder::fetch_frame_or_feed_input_packet(){
     AVPacket *pkt=av_packet_alloc();
     bool keep_fetching_frames_or_input_packets=true;
     while(keep_fetching_frames_or_input_packets){
@@ -340,7 +337,7 @@ void AVCodecDecoder::fetch_frame_or_feed_input_packet(){
     av_packet_free(&pkt);
 }
 
-void AVCodecDecoder::on_new_frame(AVFrame *frame)
+void MppDecoder::on_new_frame(AVFrame *frame)
 {
     {
         std::stringstream ss;
@@ -366,7 +363,7 @@ void AVCodecDecoder::on_new_frame(AVFrame *frame)
     //drm_prime_out->queue_new_frame_for_display(frame);
 }
 
-void AVCodecDecoder::reset_before_decode_start()
+void MppDecoder::reset_before_decode_start()
 {
     n_no_output_frame_after_x_seconds=0;
     last_frame_width=-1;
@@ -379,7 +376,7 @@ void AVCodecDecoder::reset_before_decode_start()
     m_fed_timestamps_queue.clear();
 }
 
-int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStreamConfig settings)
+int MppDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStreamConfig settings)
 {
     // this is always for primary video, unless switching is enabled
     auto stream_config=settings.primary_stream_config;
@@ -639,7 +636,7 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
 
 
 // https://ffmpeg.org/doxygen/3.3/decode_video_8c-example.html
-void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig settings)
+void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig settings)
 {
     // this is always for primary video, unless switching is enabled
     auto stream_config=settings.primary_stream_config;
@@ -654,7 +651,7 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
          decoder = avcodec_find_decoder(AV_CODEC_ID_H265);
      }
      if (!decoder) {
-         qDebug()<< "AVCodecDecoder::open_and_decode_until_error_custom_rtp: Codec not found";
+         qDebug()<< "MppDecoder::open_and_decode_until_error_custom_rtp: Codec not found";
          return;
      }
      // ----------------------
@@ -688,7 +685,7 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
      // ------------------------------------
      decoder_ctx = avcodec_alloc_context3(decoder);
      if (!decoder_ctx) {
-         qDebug()<< "AVCodecDecoder::open_and_decode_until_error_custom_rtp: Could not allocate video codec context";
+         qDebug()<< "MppDecoder::open_and_decode_until_error_custom_rtp: Could not allocate video codec context";
          return;
      }
      // ----------------------------------
@@ -724,7 +721,7 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
          avcodec_free_context(&decoder_ctx);
          return;
      }
-     qDebug()<<"AVCodecDecoder::open_and_decode_until_error_custom_rtp()-begin loop";
+     qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-begin loop";
      m_rtp_receiver=std::make_unique<RTPReceiver>(stream_config.udp_rtp_input_port,stream_config.udp_rtp_input_ip_address,stream_config.video_codec==1,settings.generic.dev_feed_incomplete_frames_to_decoder);
 
      reset_before_decode_start();
@@ -770,12 +767,12 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
          }
      }
 finish:
-     qDebug()<<"AVCodecDecoder::open_and_decode_until_error_custom_rtp()-end loop";
+     qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-end loop";
      m_rtp_receiver=nullptr;
      avcodec_free_context(&decoder_ctx);
 }
 
-void AVCodecDecoder::timestamp_add_fed(int64_t ts)
+void MppDecoder::timestamp_add_fed(int64_t ts)
 {
     m_fed_timestamps_queue.push_back(ts);
     if(m_fed_timestamps_queue.size()>=MAX_FED_TIMESTAMPS_QUEUE_SIZE){
@@ -783,7 +780,7 @@ void AVCodecDecoder::timestamp_add_fed(int64_t ts)
     }
 }
 
-bool AVCodecDecoder::timestamp_check_valid(int64_t ts)
+bool MppDecoder::timestamp_check_valid(int64_t ts)
 {
     for(const auto& el:m_fed_timestamps_queue){
         if(el==ts)return true;
@@ -791,7 +788,7 @@ bool AVCodecDecoder::timestamp_check_valid(int64_t ts)
     return false;
 }
 
-void AVCodecDecoder::timestamp_debug_valid(int64_t ts)
+void MppDecoder::timestamp_debug_valid(int64_t ts)
 {
     const bool valid=timestamp_check_valid(ts);
     if(valid){
@@ -801,7 +798,7 @@ void AVCodecDecoder::timestamp_debug_valid(int64_t ts)
     }
 }
 
-void AVCodecDecoder::dirty_generic_decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamConfig& settings)
+void MppDecoder::dirty_generic_decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamConfig& settings)
 {
     qopenhd::decode::service::decode_via_external_decode_service(settings,request_restart);
 }

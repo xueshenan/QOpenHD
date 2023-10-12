@@ -96,7 +96,7 @@ static void write_service_environment_file(const QOpenHDVideoHelper::VideoStream
     util::fs::write_file("/tmp/decode_service_params.txt",ss.str());
 }
 
-void decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamConfig& settings,std::atomic<bool>& request_restart){
+static void decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamConfig& settings,std::atomic<bool>& request_restart){
     qDebug()<<"dirty_generic_decode_via_external_decode_service begin";
     // this is always for primary video, unless switching is enabled
     auto stream_config=settings.primary_stream_config;

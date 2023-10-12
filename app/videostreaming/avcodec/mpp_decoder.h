@@ -1,9 +1,15 @@
-#ifndef AVCODEC_DECODER_H
-#define AVCODEC_DECODER_H
+#ifndef MPP_DECODER_H
+#define MPP_DECODER_H
 
-#include <qtimer.h>
+
 #include <thread>
 #include <memory>
+#include <mutex>
+#include <deque>
+#include <optional>
+#include <queue>
+#include <atomic>
+#include <qtimer.h>
 
 #include "avcodec_helper.hpp"
 #include "QOpenHDVideoHelper.hpp"
@@ -11,22 +17,16 @@
 
 #include "rtp/rtpreceiver.h"
 
-#include <mutex>
-#include <deque>
-#include <optional>
-#include <queue>
-#include <atomic>
-
 /**
  * Decoding and display of primary video on all platforms except android
  * NOTE: On rpi, we actually don't use avcodec, but the decode service workaround (mmal)
  * since it is the only way to get (ish) low latency h264 video on rpi.
  */
-class AVCodecDecoder : public QObject
+class MppDecoder : public QObject
 {
 public:
-    AVCodecDecoder(QObject *parent = nullptr);
-    ~AVCodecDecoder();
+    MppDecoder(QObject *parent = nullptr);
+    ~MppDecoder();
     // called when app is created
     void init(bool primaryStream);
     // called when app terminates
@@ -105,4 +105,4 @@ private:
     void dirty_generic_decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamConfig& settings);
 };
 
-#endif // AVCODEC_DECODER_H
+#endif // MPP_DECODER_H

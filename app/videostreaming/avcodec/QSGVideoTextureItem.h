@@ -10,6 +10,7 @@
 #include "texturerenderer.h"
 
 #include "avcodec_decoder.h"
+#include "mpp_decoder.h"
 
 // QSG stands for QT Screne Graph (an abbreviation they recommend)
 // Hoock into the QT Scene graph and draw video directly with (custom) OpenGL.
@@ -36,7 +37,7 @@ public slots:
     void m_QQuickWindow_beforeRendering();
     void m_QQuickWindow_beforeRenderPassRecording();
 private:
-    std::unique_ptr<AVCodecDecoder> m_av_codec_decoder=nullptr;
+    std::unique_ptr<MppDecoder> m_av_codec_decoder=nullptr;
 };
 
 #endif // QSGVideoTextureItem_H

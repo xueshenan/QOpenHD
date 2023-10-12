@@ -37,21 +37,25 @@ QOpenHD::QOpenHD(QObject *parent)
 #if defined(ENABLE_SPEECH)
     m_speech = new QTextToSpeech(this);
     QStringList engines = QTextToSpeech::availableEngines();
-    qDebug() << "Available SPEECH engines:";
+    if (engines.empty()) {
+        qDebug() << "No available speech engine";
+        return;
+    }
+    qDebug() << "Available speech engines:";
     for (auto& engine : engines) {
         qDebug() << "  " << engine;
     }
     // List the available locales.
-//    qDebug() << "Available locales:";
+    qDebug() << "Available locales:";
     for (auto& locale : m_speech->availableLocales()) {
-//        qDebug() << "  " << locale;
+        qDebug() << "  " << locale;
     }
     // Set locale.
     m_speech->setLocale(QLocale(QLocale::English, QLocale::LatinScript, QLocale::UnitedStates));
     // List the available voices.
-//    qDebug() << "Available voices:";
+    qDebug() << "Available voices:";
     for (auto& voice : m_speech->availableVoices()) {
-//        qDebug() << "  " << voice.name();
+        qDebug() << "  " << voice.name();
     }
     // Display properties.
     qDebug() << "Locale:" << m_speech->locale();
@@ -99,11 +103,11 @@ void QOpenHD::textToSpeech_sayMessage(QString message)
 {
 #if defined(ENABLE_SPEECH)  
     QSettings settings;
-    if (settings.value("enable_speech", false).toBool() == true){
+    if (settings.value("enable_speech", false).toBool() == true) {
         //m_speech->setVolume(m_volume/100.0);
         qDebug() << "QOpenHD::textToSpeech_sayMessage say:" << message;
         m_speech->say(message);
-    }else{
+    } else{
         qDebug()<<"TextToSpeech disabled, msg:"<<message;
     }
 #else

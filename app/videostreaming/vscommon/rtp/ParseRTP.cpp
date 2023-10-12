@@ -53,7 +53,7 @@ bool RTPDecoder::validateRTPPacket(const rtp_header_t& rtp_header) {
     if(seqNr==lastSequenceNumber){
         // duplicate. This should never happen for 'normal' rtp streams, but can be usefully when testing bitrates
         // (Since you can send the same packet multiple times to emulate a higher bitrate)
-        MLOGD<<"Same seqNr";
+        //MLOGD<<"Same seqNr";
         return false;
     }
     if(lastSequenceNumber==-1){
@@ -91,7 +91,7 @@ void RTPDecoder::h264_reconstruct_and_forward_one_nalu(const uint8_t *data,const
     timePointStartOfReceivingNALU=std::chrono::steady_clock::now();
     // Full NALU - we can remove the 'drop packet' flag
     if(flagPacketHasGoneMissing){
-        MLOGD<<"Got full NALU - clearing missing packet flag";
+        //MLOGD<<"Got full NALU - clearing missing packet flag";
         flagPacketHasGoneMissing= false;
     }
     write_h264_h265_nalu_start();

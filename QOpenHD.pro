@@ -97,11 +97,17 @@ LinuxBuild {
     # Gstreamer / qmlglsink decode and display, all sources
     # r.n only used for secondary video and for primary video only on platforms we cannot do primary video via QSG / avcodec
     include(app/videostreaming/gstreamer/gst_video.pri)
-}
 
-# adsb library
-# Only tested on linux so far, but might work on other platforms already / with minimal effort, too
-LinuxBuild {
+    CONFIG += EnableSpeech
+    DEFINES += ENABLE_SPEECH
+    QT += texttospeech
+
+    contains(QMAKE_HOST.arch, aarch64) {
+        message("compile for linux arm64")
+    }
+
+    # adsb library
+    # Only tested on linux so far, but might work on other platforms already / with minimal effort, too
     # include(app/adsb/adsb_lib.pri)
 }
 
@@ -234,14 +240,6 @@ MacBuild {
     LIBS += -framework ApplicationServices
     LIBS += -framework VideoToolbox -framework CoreVideo -framework CoreMedia
     CONFIG += EnableSpeech
-}
-
-LinuxBuild {
-    message("LinuxBuild")
-}
-
-JetsonBuild {
-    message("JetsonBuild")
 }
 
 WindowsBuild {
