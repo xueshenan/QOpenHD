@@ -18,58 +18,9 @@
 
 #include "ExternalDecodeService.hpp"
 
-static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type){
-    int err = 0;
-    ctx->hw_frames_ctx = NULL;
-    // ctx->hw_device_ctx gets freed when we call avcodec_free_context
-    if ((err = av_hwdevice_ctx_create(&ctx->hw_device_ctx, type,
-                                      NULL, NULL, 0)) < 0) {
-        fprintf(stderr, "Failed to create specified HW device.\n");
-        return err;
-    }
-    return err;
-}
-
 static enum AVPixelFormat wanted_hw_pix_fmt;
-static enum AVPixelFormat get_hw_format(AVCodecContext */*ctx*/,const enum AVPixelFormat *pix_fmts){
-    const enum AVPixelFormat *p;
-    AVPixelFormat ret=AV_PIX_FMT_NONE;
-    std::stringstream supported_formats;
-    for (p = pix_fmts; *p != -1; p++) {
-        const int tmp=(int)*p;
-        supported_formats<<safe_av_get_pix_fmt_name(*p)<<"("<<tmp<<"),";
-        if (*p == wanted_hw_pix_fmt){
-          // matches what we want
-          ret=*p;
-        }
-    }
-    qDebug()<<"Supported (HW) pixel formats: "<<supported_formats.str().c_str();
-    if(ret==AV_PIX_FMT_NONE){
-      fprintf(stderr, "Failed to get HW surface format. Wanted: %s\n", av_get_pix_fmt_name(wanted_hw_pix_fmt));
-    }
-    return ret;
-}
 
-// For SW decode, we support YUV420 | YUV422 and their (mjpeg) abbreviates since
-// we can always copy and render these formats via OpenGL - and when we are doing SW decode
-// we most likely are on a (fast) x86 platform where we can copy those formats via CPU
-// relatively easily, at least the resolutions common in OpenHD
-static enum AVPixelFormat get_sw_format(AVCodecContext */*ctx*/,const enum AVPixelFormat *pix_fmts){
-    const enum AVPixelFormat *p;
-    qDebug()<<"All (SW) pixel formats:"<<all_formats_to_string(pix_fmts).c_str();
-    for (p = pix_fmts; *p != -1; p++) {
-        const AVPixelFormat tmp=*p;
-        if(tmp==AV_PIX_FMT_YUV420P || tmp==AV_PIX_FMT_YUV422P || tmp==AV_PIX_FMT_YUVJ422P || tmp==AV_PIX_FMT_YUVJ420P){
-            return tmp;
-        }
-    }
-    qDebug()<<"Weird, we should be able to do SW decoding on all platforms";
-    return AV_PIX_FMT_NONE;
-}
-
-
-MppDecoder::MppDecoder(QObject *parent):
-    QObject(parent)
+MppDecoder::MppDecoder(QObject *parent) : QObject(parent)
 {
 }
 
@@ -243,7 +194,7 @@ int MppDecoder::decode_config_data(AVPacket *packet)
 bool MppDecoder::feed_rtp_frame_if_available()
 {
     auto frame=m_rtp_receiver->get_next_frame();
-    if(frame){
+    if (frame) {
         {
             // parsing delay
             const auto delay=std::chrono::steady_clock::now()-frame->get_nal().creationTime;
@@ -416,18 +367,9 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
     // --------------------------------------
     // --------------------------------------
     std::string selected_decoding_type="?";
-    if(use_pi_hw_decode){
-        decoder_ctx->get_format  = get_hw_format;
-        if (hw_decoder_init(decoder_ctx, AV_HWDEVICE_TYPE_DRM) < 0){
-          qDebug()<<"HW decoder init failed,fallback to SW decode";
-          selected_decoding_type="SW(HW failed)";
-          assert(true);
-        }else{
-            selected_decoding_type="HW";
-        }
-    }else{
-        selected_decoding_type="SW";
-    }
+
+    selected_decoding_type="HW";
+
     // A thread count of 1 reduces latency for both SW and HW decode
     decoder_ctx->thread_count = 1;
 

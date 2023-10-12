@@ -37,7 +37,11 @@ public slots:
     void m_QQuickWindow_beforeRendering();
     void m_QQuickWindow_beforeRenderPassRecording();
 private:
-    std::unique_ptr<MppDecoder> m_av_codec_decoder=nullptr;
+#ifdef ENABLE_MPP_DECODER
+    std::unique_ptr<MppDecoder> _decoder = nullptr;
+#else
+    std::unique_ptr<AVCodecDecoder> _decoder = nullptr;
+#endif
 };
 
 #endif // QSGVideoTextureItem_H

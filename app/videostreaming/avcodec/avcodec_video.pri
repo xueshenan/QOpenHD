@@ -16,8 +16,7 @@ SOURCES += \
     $$PWD/avcodec_decoder.cpp \
 
 HEADERS += \
-    $$PWD/QSGVideoTextureItem.h \
-    $$PWD/gl/gl_shaders.h \
+    $$PWD/QSGVideoTextureItem.h \    $$PWD/gl/gl_shaders.h \
     $$PWD/gl/gl_videorenderer.h \
     $$PWD/mpp_decoder.h \
     $$PWD/texturerenderer.h \
@@ -32,3 +31,10 @@ packagesExist(mmal) {
 
 # can be used in c++, also set to be exposed in qml
 DEFINES += QOPENHD_ENABLE_VIDEO_VIA_AVCODEC
+
+LinuxBuild {
+    contains(QMAKE_HOST.arch, aarch64) {
+        message("compile for linux arm64 with mpp support")
+        DEFINES += ENABLE_MPP_DECODER
+    }
+}

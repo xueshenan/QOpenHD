@@ -13,9 +13,12 @@ QSGVideoTextureItem::QSGVideoTextureItem():
     m_renderer(nullptr)
 {
     connect(this, &QQuickItem::windowChanged, this, &QSGVideoTextureItem::handleWindowChanged);
-    //
-    m_av_codec_decoder=std::make_unique<MppDecoder>(nullptr);
-    m_av_codec_decoder->init(true);
+#ifdef ENABLE_MPP_DECODER
+    _decoder = std::make_unique<MppDecoder>(nullptr);
+#else
+    _decoder = std::make_unique<AVCodecDecoder>(nullptr);
+#endif
+    _decoder->init(true);
 }
 
 

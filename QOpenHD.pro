@@ -101,11 +101,6 @@ LinuxBuild {
     CONFIG += EnableSpeech
     DEFINES += ENABLE_SPEECH
     QT += texttospeech
-
-    contains(QMAKE_HOST.arch, aarch64) {
-        message("compile for linux arm64")
-    }
-
     # adsb library
     # Only tested on linux so far, but might work on other platforms already / with minimal effort, too
     # include(app/adsb/adsb_lib.pri)
