@@ -32,9 +32,9 @@ public:
     // called when app terminates
     void terminate();
 private:
-    AVCodecContext *decoder_ctx = nullptr;
-    const AVCodec *decoder = nullptr;
-    std::unique_ptr<std::thread> decode_thread=nullptr;
+    AVCodecContext *_decoder_ctx = nullptr;
+    const AVCodec *_decoder = nullptr;
+    std::unique_ptr<std::thread> _decode_thread = nullptr;
 private:
     // The logic of this decode "machine" is simple:
     // Start decoding as soon as enough config data has been received
@@ -54,10 +54,9 @@ private:
     void on_new_frame(AVFrame* frame);
     // simle restart, e.g. when the video codec or the video resolution has changed we need to break
     // out of a running "constant_decode_xx" loop
-    std::atomic<bool> request_restart=false;
+    std::atomic<bool> request_restart = false;
     // Completely stop (Exit QOpenHD)
-    bool m_should_terminate=false;
-    int n_no_output_frame_after_x_seconds=0;
+    bool _should_terminate=false;
     bool use_frame_timestamps_for_latency=false;
     AvgCalculator avg_decode_time{"Decode"};
     AvgCalculator avg_parse_time{"Parse&Enqueue"};
@@ -68,35 +67,27 @@ private:
     // read settings. In case they differ, request a complete restart from the decoder.
     std::unique_ptr<QTimer> timer_check_settings_changed = nullptr;
     void timer_check_settings_changed_callback();
-    QOpenHDVideoHelper::VideoStreamConfig m_last_video_settings;
+    QOpenHDVideoHelper::VideoStreamConfig _last_video_settings;
 private:
-    int last_frame_width=-1;
-    int last_frame_height=-1;
-private:
-    //std::unique_ptr<DRMPrimeOut> drm_prime_out=nullptr;
+    int _last_frame_width = -1;
+    int _last_frame_height = -1;
 private:
     // timestamp used during feed frame
-    void timestamp_add_fed(int64_t ts);
-    bool timestamp_check_valid(int64_t ts);
-    void timestamp_debug_valid(int64_t ts);
+    void add_feed_timestamp(int64_t ts);
+
     // Must be big enough to catch frame buffering+1, small enough to fit in memory
     // and be searchable with a for loop. !00 sounds like a good fit.
-    static constexpr auto MAX_FED_TIMESTAMPS_QUEUE_SIZE=100;
-    std::deque<int64_t> m_fed_timestamps_queue;
+    std::deque<int64_t> _fed_timestamps_queue;
 private:
-    void fetch_frame_or_feed_input_packet();
-private:
-    std::unique_ptr<RTPReceiver> m_rtp_receiver=nullptr;
+    std::unique_ptr<RTPReceiver> _rtp_receiver = nullptr;
 private:
     // Custom rtp parse (and therefore limited to h264 and h265)
     // AND always goes the avcodec decode route (SW decode or avcodec mmal decode).
     // Used for SW decode, for MMAL h264 we go the custom rtp WITHOUT avcodec route by default !
-    void open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig settings);
+    void open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig &settings);
     bool feed_rtp_frame_if_available();
 private:
     void reset_before_decode_start();
-    // On some platforms, it is easiest to just start and stop a service that does the video decode (QOpenHD is then transparently layered on top)
-    void dirty_generic_decode_via_external_decode_service(const QOpenHDVideoHelper::VideoStreamConfig& settings);
 };
 
 #endif // MPP_DECODER_H
