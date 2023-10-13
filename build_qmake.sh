@@ -7,7 +7,7 @@ mkdir build
 pushd build
 
 #/usr/lib/aarch64-linux-gnu/qt5/bin/qmake ..
-/usr/local/Qt-5.15.10/bin/qmake ..
+/home/orangepi/work/qt-everywhere-src-5.15.10/install/bin/qmake ..
 
 make -j4
 

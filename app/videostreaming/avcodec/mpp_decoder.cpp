@@ -19,6 +19,25 @@
 #include "ExternalDecodeService.hpp"
 
 static enum AVPixelFormat wanted_hw_pix_fmt = AV_PIX_FMT_NONE;
+static enum AVPixelFormat get_hw_format(AVCodecContext */*ctx*/,const enum AVPixelFormat *pix_fmts){
+    const enum AVPixelFormat *p;
+    AVPixelFormat ret=AV_PIX_FMT_NONE;
+    std::stringstream supported_formats;
+    for (p = pix_fmts; *p != -1; p++) {
+        const int tmp=(int)*p;
+        supported_formats<<safe_av_get_pix_fmt_name(*p)<<"("<<tmp<<"),";
+        if (*p == wanted_hw_pix_fmt){
+          // matches what we want
+          ret=*p;
+        }
+    }
+    qDebug()<<"Supported (HW) pixel formats: "<<supported_formats.str().c_str();
+    if(ret==AV_PIX_FMT_NONE){
+      fprintf(stderr, "Failed to get HW surface format. Wanted: %s\n", av_get_pix_fmt_name(wanted_hw_pix_fmt));
+    }
+    return ret;
+}
+
 static constexpr auto MAX_FED_TIMESTAMPS_QUEUE_SIZE = 100;
 
 MppDecoder::MppDecoder(QObject *parent) : QObject(parent)
@@ -119,7 +138,6 @@ int MppDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std::ch
     }
     int ret = 0;
     // Poll until we get the frame out
-    const auto loopUntilFrameBegin = std::chrono::steady_clock::now();
     bool gotFrame = false;
     int n_times_we_tried_getting_a_frame_this_time=0;
     while (!gotFrame) {
@@ -227,8 +245,8 @@ void MppDecoder::reset_before_decode_start()
     avg_decode_time.reset();
     avg_parse_time.reset();
     DecodingStatistcs::instance().reset_all_to_default();
-    _last_frame_width=-1;
-    _last_frame_height=-1;
+    _last_frame_width = -1;
+    _last_frame_height = -1;
     _fed_timestamps_queue.clear();
 }
 
@@ -243,7 +261,10 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
     av_log_set_level(AV_LOG_TRACE);
     assert(stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH264 || stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH265);
     if (stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH264) {
-        _decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+        _decoder = avcodec_find_decoder_by_name("h264_rkmpp");
+        if (_decoder == NULL) {
+            _decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+        }
     } else if (stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH265) {
         _decoder = avcodec_find_decoder(AV_CODEC_ID_H265);
     }
@@ -276,6 +297,7 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
     // --------------------------------------
     // --------------------------------------
     std::string selected_decoding_type="HW";
+    _decoder_ctx->get_format  = get_hw_format;
 
     // A thread count of 1 reduces latency for both SW and HW decode
     _decoder_ctx->thread_count = 1;
