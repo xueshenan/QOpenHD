@@ -96,7 +96,7 @@ LinuxBuild {
 
     # Gstreamer / qmlglsink decode and display, all sources
     # r.n only used for secondary video and for primary video only on platforms we cannot do primary video via QSG / avcodec
-    include(app/videostreaming/gstreamer/gst_video.pri)
+#    include(app/videostreaming/gstreamer/gst_video.pri)
 
     CONFIG += EnableSpeech
     DEFINES += ENABLE_SPEECH

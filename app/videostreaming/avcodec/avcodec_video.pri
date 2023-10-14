@@ -77,13 +77,15 @@ LinuxBuild {
             $$PWD/mpplib/utils/mpp_opt.h \
             $$PWD/mpplib/utils/utils.h \
 
-        INCLUDEPATH += /usr/include/rockchip/
+#        INCLUDEPATH += /usr/include/rockchip/
+#        LIBS += -lrockchip_mpp
+
+        INCLUDEPATH += /usr/local/include/rockchip/
+        LIBS += -L/usr/local/lib/ -lrockchip_mpp
+
         INCLUDEPATH += $$PWD/mpplib/osal/inc/
         INCLUDEPATH += $$PWD/mpplib/base/inc/
-
         LIBS += -L$$PWD/mpplib/osal/ -losal
         LIBS += -L$$PWD/mpplib/base/ -lmpp_base
-        LIBS += $$PWD/mpplib/mpp/librockchip_mpp.so
-        #LIBS += -L$$PWD/mpplib/mpp/ -lrockchip_mpp
     }
 }

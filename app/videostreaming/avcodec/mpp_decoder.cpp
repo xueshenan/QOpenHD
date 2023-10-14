@@ -18,37 +18,9 @@
 
 #include "ExternalDecodeService.hpp"
 
-extern "C" {
-#include <rk_mpi.h>
-#include "mpp_mem.h"
-#include "mpp_env.h"
-#include "mpp_time.h"
-#include "mpp_common.h"
-#include "mpplib/utils/mpi_dec_utils.h"
-}
-
 static enum AVPixelFormat wanted_hw_pix_fmt = AV_PIX_FMT_NONE;
 
 static constexpr auto MAX_FED_TIMESTAMPS_QUEUE_SIZE = 100;
-
-typedef struct {
-    MppCtx          ctx;
-    MppApi          *mpi;
-
-    /* input and output */
-    MppBufferGroup  frm_grp;
-    MppPacket       packet;
-    MppFrame        frame;
-
-    RK_S64          first_pkt;
-    RK_S64          first_frm;
-
-    size_t          max_usage;
-    float           frame_rate;
-    RK_S64          elapsed_time;
-    RK_S64          delay;
-    FrmCrc          checkcrc;
-} MpiDecLoopData;
 
 MppDecoder::MppDecoder(QObject *parent) : QObject(parent) {
 }
@@ -112,79 +84,252 @@ void MppDecoder::constant_decode()
     }
 }
 
+static FILE *fp = fopen("/home/orangepi/work/out.yuv", "wb");
+static int total_write_count = 100;
+static int current_write_count = 0;
 
-int MppDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std::chrono::steady_clock::time_point> parse_time)
+int MppDecoder::decode_and_wait_for_frame(AVPacket *packet, std::optional<std::chrono::steady_clock::time_point> parse_time)
 {
-    AVFrame *frame = nullptr;
-    //qDebug()<<"Decode packet:"<<packet->pos<<" size:"<<packet->size<<" B";
     const auto beforeFeedFrame = std::chrono::steady_clock::now();
+
     if (parse_time != std::nullopt) {
         const auto delay = beforeFeedFrame-parse_time.value();
         avg_parse_time.add(delay);
         avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/, const std::string message) {
-            //qDebug()<<name.c_str()<<":"<<message.c_str();
             DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
         });
     }
+
     const auto beforeFeedFrameUs = getTimeUs();
     packet->pts = beforeFeedFrameUs;
     add_feed_timestamp(packet->pts);
 
-    const int ret_avcodec_send_packet = avcodec_send_packet(_decoder_ctx, packet);
+    MppCtx ctx  = _dec_data.ctx;
+    MppApi *mpi = _dec_data.mpi;
 
-    if (ret_avcodec_send_packet < 0) {
-        fprintf(stderr, "Error during decoding\n");
-        return ret_avcodec_send_packet;
+    MppPacket mpp_packet = _dec_data.packet;
+    mpp_packet_set_data(mpp_packet, packet->data);
+    mpp_packet_set_size(mpp_packet, packet->size);
+    mpp_packet_set_pos(mpp_packet, packet->data);
+    mpp_packet_set_length(mpp_packet, packet->size);
+
+    MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
+    if (ret == MPP_OK) {
+        if (!_dec_data.first_pkt) {
+            _dec_data.first_pkt = mpp_time();
+        }
     }
-    // alloc output frame(s)
-    if (!(frame = av_frame_alloc())) {
-        // NOTE: It is a common practice to not care about OOM, and this is the best approach in my opinion.
-        // but ffmpeg uses malloc and returns error codes, so we keep this practice here.
-        qDebug()<<"can not alloc frame";
-        av_frame_free(&frame);
-        return AVERROR(ENOMEM);
-    }
-    int ret = 0;
+
     // Poll until we get the frame out
     bool gotFrame = false;
-    int n_times_we_tried_getting_a_frame_this_time=0;
+    int n_times_we_tried_getting_a_frame_this_time = 0;
     while (!gotFrame) {
-        ret = avcodec_receive_frame(_decoder_ctx, frame);
-        if (ret == AVERROR_EOF) {
-            qDebug()<<"Got EOF";
-            break;
-        } else if (ret == 0) {
-            //debug_is_valid_timestamp(frame->pts);
-            // we got a new frame
-            if (!use_frame_timestamps_for_latency) {
-                const auto x_delay=std::chrono::steady_clock::now() - beforeFeedFrame;
-                //qDebug()<<"(True) decode delay(wait):"<<((float)std::chrono::duration_cast<std::chrono::microseconds>(x_delay).count()/1000.0f)<<" ms";
-                avg_decode_time.add(x_delay);
-            } else {
-                const auto now_us=getTimeUs();
-                const auto delay_us=now_us-frame->pts;
-                //qDebug()<<"(True) decode delay(nowait):"<<((float)delay_us/1000.0f)<<" ms";
-                //MLOGD<<"Frame pts:"<<frame->pts<<" Set to:"<<now<<"\n";
-                //frame->pts=now;
-                avg_decode_time.add(std::chrono::microseconds(delay_us));
+        MppFrame frame = NULL;
+        RK_S32 times = 5;
+try_again:
+        ret = mpi->decode_get_frame(ctx, &frame);
+        if (ret == MPP_ERR_TIMEOUT) {
+            if (times > 0) {
+                times--;
+                msleep(1);
+                goto try_again;
             }
-            gotFrame=true;
-            frame->pts=beforeFeedFrameUs;
-            // display frame
-            on_new_frame(frame);
-            avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/,const std::string message){
-                //qDebug()<<name.c_str()<<":"<<message.c_str();
-                DecodingStatistcs::instance().set_decode_time(message.c_str());
-            });
-        } else if (ret == AVERROR(EAGAIN)) {
-            break;
-        } else {
-            qDebug()<<"Got unlikely / weird error:"<<ret;
+            printf("%p decode_get_frame failed too much time\n", ctx);
+        }
+        if (ret != MPP_OK) {
+            qDebug() << "decode_get_frame failed ret " << ret;
             break;
         }
-        n_times_we_tried_getting_a_frame_this_time++;
+
+        gotFrame = true;
+
+        // we got a new frame
+        if (frame != NULL) {
+            if (mpp_frame_get_info_change(frame)) {
+                RK_U32 width = mpp_frame_get_width(frame);
+                RK_U32 height = mpp_frame_get_height(frame);
+                RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
+                RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
+                RK_U32 buf_size = mpp_frame_get_buf_size(frame);
+
+                qDebug() <<"decode_get_frame get info changed found";
+                qDebug() << "decoder require buffer w:h [" << width << ":" << height << "]"
+                         << "stride [" << hor_stride << ":" << ver_stride << "]"
+                         << "buf_size " << buf_size;
+
+                /*
+                 * NOTE: We can choose decoder's buffer mode here.
+                 * There are three mode that decoder can support:
+                 *
+                 * Mode 1: Pure internal mode
+                 * In the mode user will NOT call MPP_DEC_SET_EXT_BUF_GROUP
+                 * control to decoder. Only call MPP_DEC_SET_INFO_CHANGE_READY
+                 * to let decoder go on. Then decoder will use create buffer
+                 * internally and user need to release each frame they get.
+                 *
+                 * Advantage:
+                 * Easy to use and get a demo quickly
+                 * Disadvantage:
+                 * 1. The buffer from decoder may not be return before
+                 * decoder is close. So memroy leak or crash may happen.
+                 * 2. The decoder memory usage can not be control. Decoder
+                 * is on a free-to-run status and consume all memory it can
+                 * get.
+                 * 3. Difficult to implement zero-copy display path.
+                 *
+                 * Mode 2: Half internal mode
+                 * This is the mode current test code using. User need to
+                 * create MppBufferGroup according to the returned info
+                 * change MppFrame. User can use mpp_buffer_group_limit_config
+                 * function to limit decoder memory usage.
+                 *
+                 * Advantage:
+                 * 1. Easy to use
+                 * 2. User can release MppBufferGroup after decoder is closed.
+                 *    So memory can stay longer safely.
+                 * 3. Can limit the memory usage by mpp_buffer_group_limit_config
+                 * Disadvantage:
+                 * 1. The buffer limitation is still not accurate. Memory usage
+                 * is 100% fixed.
+                 * 2. Also difficult to implement zero-copy display path.
+                 *
+                 * Mode 3: Pure external mode
+                 * In this mode use need to create empty MppBufferGroup and
+                 * import memory from external allocator by file handle.
+                 * On Android surfaceflinger will create buffer. Then
+                 * mediaserver get the file handle from surfaceflinger and
+                 * commit to decoder's MppBufferGroup.
+                 *
+                 * Advantage:
+                 * 1. Most efficient way for zero-copy display
+                 * Disadvantage:
+                 * 1. Difficult to learn and use.
+                 * 2. Player work flow may limit this usage.
+                 * 3. May need a external parser to get the correct buffer
+                 * size for the external allocator.
+                 *
+                 * The required buffer size caculation:
+                 * hor_stride * ver_stride * 3 / 2 for pixel data
+                 * hor_stride * ver_stride / 2 for extra info
+                 * Total hor_stride * ver_stride * 2 will be enough.
+                 *
+                 * For H.264/H.265 20+ buffers will be enough.
+                 * For other codec 10 buffers will be enough.
+                 */
+
+                if (_dec_data.frm_grp == NULL) {
+                    /* If buffer group is not set create one and limit it */
+                    ret = mpp_buffer_group_get_internal(&_dec_data.frm_grp, MPP_BUFFER_TYPE_ION);
+                    if (ret) {
+                        printf("%p get mpp buffer group failed ret %d\n", ctx, ret);
+                        break;
+                    }
+
+                    /* Set buffer to mpp decoder */
+                    ret = mpi->control(ctx, MPP_DEC_SET_EXT_BUF_GROUP, _dec_data.frm_grp);
+                    if (ret) {
+                        printf("%p set buffer group failed ret %d\n", ctx, ret);
+                        break;
+                    }
+                } else {
+                    /* If old buffer group exist clear it */
+                    ret = mpp_buffer_group_clear(_dec_data.frm_grp);
+                    if (ret) {
+                        printf("%p clear buffer group failed ret %d\n", ctx, ret);
+                        break;
+                    }
+                }
+
+                /* Use limit config to limit buffer count to 24 with buf_size */
+                ret = mpp_buffer_group_limit_config(_dec_data.frm_grp, buf_size, 24);
+                if (ret) {
+                    printf("%p limit buffer group failed ret %d\n", ctx, ret);
+                    break;
+                }
+
+                /*
+                 * All buffer group config done. Set info change ready to let
+                 * decoder continue decoding
+                 */
+                ret = mpi->control(ctx, MPP_DEC_SET_INFO_CHANGE_READY, NULL);
+                if (ret) {
+                    printf("%p info change ready failed ret %d\n", ctx, ret);
+                    break;
+                }
+            }
+
+            if (!use_frame_timestamps_for_latency) {
+                const auto x_delay = std::chrono::steady_clock::now() - beforeFeedFrame;
+                // qDebug()<<"(True) decode delay(wait):"<<((float)std::chrono::duration_cast<std::chrono::microseconds>(x_delay).count()/1000.0f)<<" ms";
+                avg_decode_time.add(x_delay);
+            }
+            avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name, const std::string message) {
+                Q_UNUSED(name)
+                qDebug()<<name.c_str()<<":"<<message.c_str();
+                DecodingStatistcs::instance().set_decode_time(message.c_str());
+            });
+
+            RK_U32 width = mpp_frame_get_width(frame);
+            RK_U32 height = mpp_frame_get_height(frame);
+            RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
+            RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
+            MppFrameFormat fmt = mpp_frame_get_fmt(frame);      //yuv420sp
+            MppBuffer buffer = mpp_frame_get_buffer(frame);
+            if (buffer == NULL) {
+                mpp_frame_deinit(&frame);
+                break;
+            }
+            RK_U8 *base = (RK_U8 *)mpp_buffer_get_ptr(buffer);
+            RK_U8 *base_y = base;
+            RK_U8 *base_c = base + hor_stride * ver_stride;
+
+//            if (current_write_count < total_write_count) {
+//                for (int i = 0; i < height; i++, base_y += hor_stride) {
+//                    fwrite(base_y, 1, width, fp);
+//                }
+//                for (int i = 0; i < height / 2; i++, base_c += hor_stride) {
+//                    fwrite(base_c, 1, width, fp);
+//                }
+//                current_write_count++;
+//            }
+//            else if (current_write_count == total_write_count) {
+//                fclose(fp);
+//                qDebug() << "write file end";
+//                current_write_count++;
+//            }
+
+            // alloc output frame and set info
+            AVFrame *out_frame = av_frame_alloc();
+            out_frame->width = width;
+            out_frame->height = height;
+            out_frame->format = AV_PIX_FMT_YUV420P;
+            int ret = av_frame_get_buffer(out_frame, 16);
+            if (ret != 0) {
+                char buf[1024] = {0};
+                av_strerror(ret, buf, sizeof(buf));
+                qDebug() << buf;
+                goto FreeBuffer;
+            }
+
+            if (out_frame == NULL) {
+                // NOTE: It is a common practice to not care about OOM, and this is the best approach in my opinion.
+                // but ffmpeg uses malloc and returns error codes, so we keep this practice here.
+                qDebug()<<"can not alloc frame";
+                av_frame_free(&out_frame);
+                return AVERROR(ENOMEM);
+            }
+
+            out_frame->pts = beforeFeedFrameUs;
+            // display frame
+            on_new_frame(out_frame);
+FreeBuffer:
+            av_frame_free(&out_frame);
+
+            n_times_we_tried_getting_a_frame_this_time++;
+            mpp_frame_deinit(&frame);
+        }
     }
-    av_frame_free(&frame);
+
     return 0;
 }
 
@@ -261,62 +406,14 @@ void MppDecoder::reset_before_decode_start()
 // https://ffmpeg.org/doxygen/3.3/decode_video_8c-example.html
 void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig &settings)
 {
-    init_mpp_decoder();
+    bool ret = init_mpp_decoder();
+    assert(ret);
 
     // this is always for primary video, unless switching is enabled
     auto stream_config = settings.primary_stream_config;
 
     // This thread pulls frame(s) from the rtp decoder and therefore should have high priority
     SchedulingHelper::setThreadParamsMaxRealtime();
-    av_log_set_level(AV_LOG_TRACE);
-    assert(stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH264 || stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH265);
-    if (stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH264) {
-        //_decoder = avcodec_find_decoder_by_name("h264_rkmpp");
-        if (_decoder == NULL) {
-            _decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
-        }
-    } else if (stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH265) {
-        _decoder = avcodec_find_decoder(AV_CODEC_ID_H265);
-    }
-    if (_decoder == NULL) {
-        qDebug()<< "MppDecoder::open_and_decode_until_error_custom_rtp: Codec not found";
-        return;
-    }
-    // ----------------------
-    if (_decoder->id == AV_CODEC_ID_H264) {
-        qDebug()<<"H264 decode";
-        wanted_hw_pix_fmt = AV_PIX_FMT_YUV420P;
-    } else if (_decoder->id == AV_CODEC_ID_H265) {
-        qDebug()<<"H265 decode";
-    }
-
-    // ------------------------------------
-    _decoder_ctx = avcodec_alloc_context3(_decoder);
-    if (_decoder_ctx == NULL) {
-        qDebug()<< "MppDecoder::open_and_decode_until_error_custom_rtp: Could not allocate video codec context";
-        return;
-    }
-     // ----------------------------------
-    // From moonlight-qt. However, on PI, this doesn't seem to make any difference, at least for H265 decode.
-    // (I never measured h264, but don't think there it is different).
-    // Always request low delay decoding
-    _decoder_ctx->flags |= AV_CODEC_FLAG_LOW_DELAY;
-    // Allow display of corrupt frames and frames missing references
-    _decoder_ctx->flags |= AV_CODEC_FLAG_OUTPUT_CORRUPT;
-    _decoder_ctx->flags2 |= AV_CODEC_FLAG2_SHOW_ALL;
-    // --------------------------------------
-    // --------------------------------------
-    std::string selected_decoding_type="HW";
-
-    // A thread count of 1 reduces latency for both SW and HW decode
-    _decoder_ctx->thread_count = 1;
-
-    // ---------------------------------------
-    if (avcodec_open2(_decoder_ctx, _decoder, NULL) < 0) {
-     fprintf(stderr, "Could not open codec\n");
-     avcodec_free_context(&_decoder_ctx);
-     return;
-    }
 
     qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-begin loop";
     _rtp_receiver=std::make_unique<RTPReceiver>(stream_config.udp_rtp_input_port,
@@ -325,10 +422,9 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
                                               settings.generic.dev_feed_incomplete_frames_to_decoder);
 
      reset_before_decode_start();
-     DecodingStatistcs::instance().set_decoding_type(selected_decoding_type.c_str());
+     DecodingStatistcs::instance().set_decoding_type("HW");
      AVPacket *pkt=av_packet_alloc();
      assert(pkt != NULL);
-     bool has_keyframe_data = false;
      while (true)
      {
          // We break out of this loop if someone requested a restart
@@ -341,30 +437,14 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
              qDebug()<<"Break/Restart,config has changed during decode";
              goto finish;
          }
-         //std::this_thread::sleep_for(std::chrono::milliseconds(3000));
-         if (!has_keyframe_data) {
-              std::shared_ptr<std::vector<uint8_t>> keyframe_buf=_rtp_receiver->get_config_data();
-              if (keyframe_buf == nullptr) {
-                  std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                  continue;
-              }
-              qDebug()<<"Got decode data (before keyframe)";
-              pkt->data = keyframe_buf->data();
-              pkt->size = keyframe_buf->size();
-              decode_config_data(pkt);
-              has_keyframe_data=true;
-              continue;
-         } else {
-             auto buf = _rtp_receiver->get_next_frame(std::chrono::milliseconds(kDefaultFrameTimeout));
-             if (buf == nullptr) {
-                 // No buff after X seconds
-                 continue;
-             }
-             //qDebug()<<"Got decode data (after keyframe)";
-             pkt->data = (uint8_t*)buf->get_nal().getData();
-             pkt->size = buf->get_nal().getSize();
-             decode_and_wait_for_frame(pkt,buf->get_nal().creationTime);
+         auto buf = _rtp_receiver->get_next_frame(std::chrono::milliseconds(kDefaultFrameTimeout));
+         if (buf == nullptr) {
+             // No buff after X seconds
+             continue;
          }
+         pkt->data = (uint8_t*)buf->get_nal().getData();
+         pkt->size = buf->get_nal().getSize();
+         decode_and_wait_for_frame(pkt, buf->get_nal().creationTime);
      }
 finish:
      qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-end loop";
@@ -383,23 +463,18 @@ void MppDecoder::add_feed_timestamp(int64_t ts)
 bool MppDecoder::init_mpp_decoder() {
     MPP_RET ret = MPP_OK;
 
-    MpiDecTestCmd cmd_ctx;
-
-    memset(&cmd_ctx, 0, sizeof(MpiDecTestCmd));
-    cmd_ctx.format = MPP_FMT_BUTT;
-    cmd_ctx.pkt_size = MPI_DEC_STREAM_SIZE;
+    memset(&_cmd_ctx, 0, sizeof(MpiDecTestCmd));
+    _cmd_ctx.format = MPP_FMT_BUTT;
+    _cmd_ctx.pkt_size = MPI_DEC_STREAM_SIZE;
 
     // base flow context
     MppCtx ctx          = NULL;
     MppApi *mpi         = NULL;
 
-    // input / output
+    // input
     MppPacket packet    = NULL;
-    MppFrame  frame     = NULL;
 
-
-    MpiDecLoopData data;
-    memset(&data, 0, sizeof(data));
+    memset(&_dec_data, 0, sizeof(_dec_data));
 
     // config for runtime mode
     MppDecCfg cfg       = NULL;
@@ -456,10 +531,9 @@ bool MppDecoder::init_mpp_decoder() {
         goto MPP_TEST_OUT;
     }
 
-    data.ctx            = ctx;
-    data.mpi            = mpi;
-    data.packet         = packet;
-    data.frame          = frame;
+    _dec_data.ctx            = ctx;
+    _dec_data.mpi            = mpi;
+    _dec_data.packet         = packet;
 
     ret = mpi->reset(ctx);
     if (ret) {
@@ -472,22 +546,16 @@ bool MppDecoder::init_mpp_decoder() {
 MPP_TEST_OUT:
     if (packet != NULL) {
         mpp_packet_deinit(&packet);
-        data.packet = NULL;
-    }
-
-    if (frame != NULL) {
-        mpp_frame_deinit(&frame);
-        data.frame = NULL;
+        _dec_data.packet = NULL;
     }
 
     if (ctx != NULL) {
         mpp_destroy(ctx);
         ctx = NULL;
     }
-
-    if (data.frm_grp) {
-        mpp_buffer_group_put(data.frm_grp);
-        data.frm_grp = NULL;
+    if (_dec_data.frm_grp) {
+        mpp_buffer_group_put(_dec_data.frm_grp);
+        _dec_data.frm_grp = NULL;
     }
 
     if (cfg) {

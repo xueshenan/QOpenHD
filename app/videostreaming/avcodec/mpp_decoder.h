@@ -16,6 +16,31 @@
 #include "../../common/TimeHelper.hpp"
 
 #include "rtp/rtpreceiver.h"
+extern "C" {
+#include <rk_mpi.h>
+#include "mpp_mem.h"
+#include "mpp_env.h"
+#include "mpp_time.h"
+#include "mpp_common.h"
+#include "mpplib/utils/mpi_dec_utils.h"
+}
+
+typedef struct {
+    MppCtx          ctx;
+    MppApi          *mpi;
+
+    /* input */
+    MppBufferGroup  frm_grp;
+    MppPacket       packet;
+
+    RK_S64          first_pkt;
+    RK_S64          first_frm;
+
+    size_t          max_usage;
+    float           frame_rate;
+    RK_S64          elapsed_time;
+    RK_S64          delay;
+} MpiDecLoopData;
 
 /**
  * Decoding and display of primary video on all platforms except android
@@ -90,6 +115,8 @@ private:
     void reset_before_decode_start();
 private:
     bool init_mpp_decoder();
+    MpiDecTestCmd _cmd_ctx;
+    MpiDecLoopData _dec_data;
 };
 
 #endif // MPP_DECODER_H

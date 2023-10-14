@@ -96,20 +96,20 @@ void RTPReceiver::queue_data(const uint8_t* nalu_data,const std::size_t nalu_dat
     //if(config_has_changed_during_decode)return;
     //qDebug()<<"Got frame2";
     NALU nalu(nalu_data,nalu_data_len,is_h265);
-    //qDebug()<<"Got frame:"<<nalu.get_nal_unit_type_as_string().c_str();
+    // qDebug()<<"Got frame:"<<nalu.get_nal_unit_type_as_string().c_str();
     // hacky way to estimate keyframe interval
-    if(nalu.is_frame_but_not_keyframe()){
+    if (nalu.is_frame_but_not_keyframe()) {
         n_frames_non_idr++;
     }
-    if(nalu.is_keyframe()){
+    if (nalu.is_keyframe()) {
         n_frames_idr++;
     }
-    if(n_frames_idr>=3){
+    if (n_frames_idr >= 3) {
         DecodingStatistcs::instance().set_estimate_keyframe_interval((n_frames_non_idr+n_frames_idr)/n_frames_idr);
         n_frames_idr=0;
         n_frames_non_idr=0;
     }
-    if(m_keyframe_finder->allKeyFramesAvailable(is_h265)){
+    if (m_keyframe_finder->allKeyFramesAvailable(is_h265)) {
         if(!m_keyframe_finder->check_is_still_same_config_data(nalu)){
             // We neither queue on new data nor call the callback - upper level needs to reconfigure the decoder
             qDebug()<<"config_has_changed_during_decode";
@@ -118,7 +118,7 @@ void RTPReceiver::queue_data(const uint8_t* nalu_data,const std::size_t nalu_dat
         }
         // If we have all config data, start storing video frames
         // We can drop things we don't need for decoding frames though
-        if(nalu.is_config())return;
+        //if(nalu.is_config())return;
         if(nalu.is_aud())return;
         if(nalu.is_sei())return;
         if(nalu.is_dps())return;

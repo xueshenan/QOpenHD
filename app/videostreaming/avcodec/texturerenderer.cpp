@@ -115,9 +115,9 @@ int TextureRenderer::queue_new_frame_for_display(AVFrame *src_frame)
       m_display_stats.n_frames_dropped++;
       DecodingStatistcs::instance().set_n_renderer_dropped_frames(m_display_stats.n_frames_dropped);
     }
-    AVFrame *frame=frame = av_frame_alloc();
+    AVFrame *frame = av_frame_alloc();
     assert(frame);
-    if(av_frame_ref(frame, src_frame)!=0){
+    if (av_frame_ref(frame, src_frame) != 0) {
       fprintf(stderr, "av_frame_ref error\n");
       av_frame_free(&frame);
       // don't forget to give up the lock
