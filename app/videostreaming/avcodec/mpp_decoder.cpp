@@ -84,10 +84,6 @@ void MppDecoder::constant_decode()
     }
 }
 
-static FILE *fp = fopen("/home/orangepi/work/out.yuv", "wb");
-static int total_write_count = 100;
-static int current_write_count = 0;
-
 int MppDecoder::decode_and_wait_for_frame(AVPacket *packet, std::optional<std::chrono::steady_clock::time_point> parse_time)
 {
     const auto beforeFeedFrame = std::chrono::steady_clock::now();
@@ -283,23 +279,9 @@ try_again:
             RK_U8 *base_y = base;
             RK_U8 *base_c = base + hor_stride * ver_stride;
 
-//            if (current_write_count < total_write_count) {
-//                for (int i = 0; i < height; i++, base_y += hor_stride) {
-//                    fwrite(base_y, 1, width, fp);
-//                }
-//                for (int i = 0; i < height / 2; i++, base_c += hor_stride) {
-//                    fwrite(base_c, 1, width, fp);
-//                }
-//                current_write_count++;
-//            }
-//            else if (current_write_count == total_write_count) {
-//                fclose(fp);
-//                qDebug() << "write file end";
-//                current_write_count++;
-//            }
-
             // alloc output frame and set info
             AVFrame *out_frame = av_frame_alloc();
+            AVFrame *ref_frame = av_frame_alloc();
             out_frame->width = width;
             out_frame->height = height;
             out_frame->format = AV_PIX_FMT_YUV420P;
@@ -308,8 +290,27 @@ try_again:
                 char buf[1024] = {0};
                 av_strerror(ret, buf, sizeof(buf));
                 qDebug() << buf;
-                goto FreeBuffer;
+                //TODO need free
+                break;
             }
+            assert(out_frame->data[0] != NULL);
+            auto y_pos = out_frame->data[0];
+            for (int i = 0; i < height; i++, base_y += hor_stride) {
+                memcpy(y_pos, base_y, out_frame->linesize[0]);
+                y_pos += out_frame->linesize[0];
+            }
+            auto u_pos = out_frame->data[1];
+            auto v_pos = out_frame->data[2];
+            for (int i = 0; i < height / 2; i++, base_c += hor_stride) {
+                for (int j = 0; j < width / 2; j++) {
+                    *u_pos = base_c[j * 2];
+                    *v_pos = base_c[j* 2 + 1];
+                    u_pos++;
+                    v_pos++;
+                }
+            }
+
+            av_frame_ref(ref_frame, out_frame);
 
             if (out_frame == NULL) {
                 // NOTE: It is a common practice to not care about OOM, and this is the best approach in my opinion.
@@ -321,8 +322,9 @@ try_again:
 
             out_frame->pts = beforeFeedFrameUs;
             // display frame
-            on_new_frame(out_frame);
+            on_new_frame(ref_frame);
 FreeBuffer:
+            av_frame_free(&ref_frame);
             av_frame_free(&out_frame);
 
             n_times_we_tried_getting_a_frame_this_time++;
