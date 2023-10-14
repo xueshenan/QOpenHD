@@ -88,6 +88,8 @@ private:
     bool feed_rtp_frame_if_available();
 private:
     void reset_before_decode_start();
+private:
+    bool init_mpp_decoder();
 };
 
 #endif // MPP_DECODER_H

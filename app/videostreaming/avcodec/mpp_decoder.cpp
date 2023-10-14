@@ -18,34 +18,42 @@
 
 #include "ExternalDecodeService.hpp"
 
-static enum AVPixelFormat wanted_hw_pix_fmt = AV_PIX_FMT_NONE;
-static enum AVPixelFormat get_hw_format(AVCodecContext */*ctx*/,const enum AVPixelFormat *pix_fmts){
-    const enum AVPixelFormat *p;
-    AVPixelFormat ret=AV_PIX_FMT_NONE;
-    std::stringstream supported_formats;
-    for (p = pix_fmts; *p != -1; p++) {
-        const int tmp=(int)*p;
-        supported_formats<<safe_av_get_pix_fmt_name(*p)<<"("<<tmp<<"),";
-        if (*p == wanted_hw_pix_fmt){
-          // matches what we want
-          ret=*p;
-        }
-    }
-    qDebug()<<"Supported (HW) pixel formats: "<<supported_formats.str().c_str();
-    if(ret==AV_PIX_FMT_NONE){
-      fprintf(stderr, "Failed to get HW surface format. Wanted: %s\n", av_get_pix_fmt_name(wanted_hw_pix_fmt));
-    }
-    return ret;
+extern "C" {
+#include <rk_mpi.h>
+#include "mpp_mem.h"
+#include "mpp_env.h"
+#include "mpp_time.h"
+#include "mpp_common.h"
+#include "mpplib/utils/mpi_dec_utils.h"
 }
+
+static enum AVPixelFormat wanted_hw_pix_fmt = AV_PIX_FMT_NONE;
 
 static constexpr auto MAX_FED_TIMESTAMPS_QUEUE_SIZE = 100;
 
-MppDecoder::MppDecoder(QObject *parent) : QObject(parent)
-{
+typedef struct {
+    MppCtx          ctx;
+    MppApi          *mpi;
+
+    /* input and output */
+    MppBufferGroup  frm_grp;
+    MppPacket       packet;
+    MppFrame        frame;
+
+    RK_S64          first_pkt;
+    RK_S64          first_frm;
+
+    size_t          max_usage;
+    float           frame_rate;
+    RK_S64          elapsed_time;
+    RK_S64          delay;
+    FrmCrc          checkcrc;
+} MpiDecLoopData;
+
+MppDecoder::MppDecoder(QObject *parent) : QObject(parent) {
 }
 
-MppDecoder::~MppDecoder()
-{
+MppDecoder::~MppDecoder() {
     terminate();
 }
 
@@ -253,6 +261,8 @@ void MppDecoder::reset_before_decode_start()
 // https://ffmpeg.org/doxygen/3.3/decode_video_8c-example.html
 void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig &settings)
 {
+    init_mpp_decoder();
+
     // this is always for primary video, unless switching is enabled
     auto stream_config = settings.primary_stream_config;
 
@@ -261,7 +271,7 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
     av_log_set_level(AV_LOG_TRACE);
     assert(stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH264 || stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH265);
     if (stream_config.video_codec == QOpenHDVideoHelper::VideoCodecH264) {
-        _decoder = avcodec_find_decoder_by_name("h264_rkmpp");
+        //_decoder = avcodec_find_decoder_by_name("h264_rkmpp");
         if (_decoder == NULL) {
             _decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
         }
@@ -297,7 +307,6 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
     // --------------------------------------
     // --------------------------------------
     std::string selected_decoding_type="HW";
-    _decoder_ctx->get_format  = get_hw_format;
 
     // A thread count of 1 reduces latency for both SW and HW decode
     _decoder_ctx->thread_count = 1;
@@ -369,4 +378,121 @@ void MppDecoder::add_feed_timestamp(int64_t ts)
     if (_fed_timestamps_queue.size() >= MAX_FED_TIMESTAMPS_QUEUE_SIZE) {
         _fed_timestamps_queue.pop_front();
     }
+}
+
+bool MppDecoder::init_mpp_decoder() {
+    MPP_RET ret = MPP_OK;
+
+    MpiDecTestCmd cmd_ctx;
+
+    memset(&cmd_ctx, 0, sizeof(MpiDecTestCmd));
+    cmd_ctx.format = MPP_FMT_BUTT;
+    cmd_ctx.pkt_size = MPI_DEC_STREAM_SIZE;
+
+    // base flow context
+    MppCtx ctx          = NULL;
+    MppApi *mpi         = NULL;
+
+    // input / output
+    MppPacket packet    = NULL;
+    MppFrame  frame     = NULL;
+
+
+    MpiDecLoopData data;
+    memset(&data, 0, sizeof(data));
+
+    // config for runtime mode
+    MppDecCfg cfg       = NULL;
+    RK_U32 need_split   = 1;
+    RK_S32 fast_out     = 1;
+
+    ret = mpp_packet_init(&packet, NULL, 0);
+    if (ret) {
+        qDebug() << "mpp_packet_init failed";
+        goto MPP_TEST_OUT;
+    }
+
+    ret = mpp_create(&ctx, &mpi);
+    if (ret) {
+        qDebug() << "mpp_create failed";
+        goto MPP_TEST_OUT;
+    }
+
+    ret = mpp_init(ctx, MPP_CTX_DEC, MPP_VIDEO_CodingAVC);
+    if (ret) {
+        qDebug() << ctx << " mpp_init failed";
+        goto MPP_TEST_OUT;
+    }
+
+    mpp_dec_cfg_init(&cfg);
+
+    /* get default config from decoder context */
+    ret = mpi->control(ctx, MPP_DEC_GET_CFG, cfg);
+    if (ret) {
+        qDebug() << ctx << " failed to get decoder cfg ret " << ret;
+        goto MPP_TEST_OUT;
+    }
+
+    /*
+     * split_parse is to enable mpp internal frame spliter when the input
+     * packet is not aplited into frames.
+     */
+    ret = mpp_dec_cfg_set_u32(cfg, "base:split_parse", need_split);
+    if (ret) {
+        qDebug() << ctx << "failed to set split_parse ret " << ret;
+        goto MPP_TEST_OUT;
+    }
+
+    ret = mpp_dec_cfg_set_u32(cfg, "base:fast_out", fast_out);
+    if (ret) {
+        qDebug() << ctx << "failed to set fast_out ret " << ret;
+        goto MPP_TEST_OUT;
+    }
+
+
+    ret = mpi->control(ctx, MPP_DEC_SET_CFG, cfg);
+    if (ret) {
+        qDebug() << ctx << "failed to set cfg " << cfg << " ret " << ret;
+        goto MPP_TEST_OUT;
+    }
+
+    data.ctx            = ctx;
+    data.mpi            = mpi;
+    data.packet         = packet;
+    data.frame          = frame;
+
+    ret = mpi->reset(ctx);
+    if (ret) {
+       qDebug() <<ctx << " mpi->reset failed";
+       goto MPP_TEST_OUT;
+    }
+    qDebug() << "init mpp success";
+    return ret == MPP_OK;
+
+MPP_TEST_OUT:
+    if (packet != NULL) {
+        mpp_packet_deinit(&packet);
+        data.packet = NULL;
+    }
+
+    if (frame != NULL) {
+        mpp_frame_deinit(&frame);
+        data.frame = NULL;
+    }
+
+    if (ctx != NULL) {
+        mpp_destroy(ctx);
+        ctx = NULL;
+    }
+
+    if (data.frm_grp) {
+        mpp_buffer_group_put(data.frm_grp);
+        data.frm_grp = NULL;
+    }
+
+    if (cfg) {
+        mpp_dec_cfg_deinit(cfg);
+        cfg = NULL;
+    }
+    return ret;
 }
