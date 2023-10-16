@@ -78,7 +78,6 @@ private:
     std::atomic<bool> _request_restart = false;
     // Completely stop (Exit QOpenHD)
     bool _should_terminate=false;
-    bool _use_frame_timestamps_for_latency = false;
     AvgCalculator avg_decode_time{"Decode"};
     AvgCalculator avg_parse_time{"Parse&Enqueue"};
     static constexpr std::chrono::milliseconds kDefaultFrameTimeout{33*2};

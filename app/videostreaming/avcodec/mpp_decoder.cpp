@@ -89,11 +89,15 @@ int MppDecoder::decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffe
     uint8_t *data = (uint8_t*)nalu_buffer->get_nal().getData();
     int32_t size = nalu_buffer->get_nal().getSize();
 
+    //use current time as pts to calc decoder latency
+    const auto beforeFeedFrameUs = getTimeUs();
     MppPacket mpp_packet = _dec_data.packet;
     mpp_packet_set_data(mpp_packet, data);
     mpp_packet_set_size(mpp_packet, size);
     mpp_packet_set_pos(mpp_packet, data);
     mpp_packet_set_length(mpp_packet, size);
+    mpp_packet_set_pts(mpp_packet, beforeFeedFrameUs);
+    mpp_packet_set_dts(mpp_packet, beforeFeedFrameUs);
 
     MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
     if (ret == MPP_OK) {
@@ -109,8 +113,6 @@ int MppDecoder::decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffe
             DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
         });
     }
-
-    const auto beforeFeedFrameUs = getTimeUs();
 
     // Poll until we get the frame out
     bool gotFrame = false;
@@ -250,10 +252,12 @@ try_again:
                 }
             }
 
-            if (!_use_frame_timestamps_for_latency) {
-                const auto x_delay = std::chrono::steady_clock::now() - beforeFeedFrame;
+            {
+                RK_S64 pts = mpp_frame_get_pts(frame);
+                int64_t decode_us = getTimeUs() - pts;
                 // qDebug()<<"(True) decode delay(wait):"<<((float)std::chrono::duration_cast<std::chrono::microseconds>(x_delay).count()/1000.0f)<<" ms";
-                avg_decode_time.add(x_delay);
+                auto decode_ns = std::chrono::nanoseconds(decode_us * 1000);
+                avg_decode_time.add(decode_ns);
             }
             avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name, const std::string message) {
                 Q_UNUSED(name)
@@ -411,8 +415,7 @@ void MppDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStre
          if (_rtp_receiver->config_has_changed_during_decode) {
              qDebug()<<"Break/Restart,config has changed during decode";
              goto finish;
-         }
-         auto buf = _rtp_receiver->get_next_frame(std::chrono::milliseconds(kDefaultFrameTimeout));
+         }         auto buf = _rtp_receiver->get_next_frame(std::chrono::milliseconds(kDefaultFrameTimeout));
          if (buf == nullptr) {
              // No buff after X seconds
              continue;
@@ -474,8 +477,10 @@ bool MppDecoder::init_mpp_decoder() {
 
     // config for runtime mode
     MppDecCfg cfg       = NULL;
-    RK_U32 need_split   = 1;
-    RK_S32 fast_out     = 1;
+
+    RK_U32 need_split = 1;
+    RK_U32 fast_out = 1;
+    RK_U32 fast_play = 1;
 
     ret = mpp_packet_init(&packet, NULL, 0);
     if (ret) {
@@ -495,6 +500,7 @@ bool MppDecoder::init_mpp_decoder() {
         goto MPP_TEST_OUT;
     }
 
+//    MPP_DEC_SET_ENABLE_FAST_PLAY
     mpp_dec_cfg_init(&cfg);
 
     /* get default config from decoder context */
@@ -514,12 +520,18 @@ bool MppDecoder::init_mpp_decoder() {
         goto MPP_TEST_OUT;
     }
 
+
     ret = mpp_dec_cfg_set_u32(cfg, "base:fast_out", fast_out);
     if (ret) {
         qDebug() << ctx << "failed to set fast_out ret " << ret;
         goto MPP_TEST_OUT;
     }
 
+    ret = mpp_dec_cfg_set_u32(cfg, "base:enable_fast_play", fast_play);
+    if (ret) {
+        qDebug() << ctx << "failed to set enable fast play ret " << ret;
+        goto MPP_TEST_OUT;
+    }
 
     ret = mpi->control(ctx, MPP_DEC_SET_CFG, cfg);
     if (ret) {
