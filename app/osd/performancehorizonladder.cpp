@@ -2,8 +2,9 @@
 
 #include <QSGFlatColorMaterial>
 #include <QMatrix>
+#include <QTransform>
 #include <math.h>
-#include <qtransform.h>
+
 
 PerformanceHorizonLadder::PerformanceHorizonLadder(QQuickItem *parent)
     : QQuickItem(parent)
@@ -14,7 +15,6 @@ PerformanceHorizonLadder::PerformanceHorizonLadder(QQuickItem *parent)
 
 PerformanceHorizonLadder::~PerformanceHorizonLadder()
 {
-
 }
 
 void PerformanceHorizonLadder::setRoll(int roll) {
@@ -23,7 +23,6 @@ void PerformanceHorizonLadder::setRoll(int roll) {
     update();
 }
 
-
 void PerformanceHorizonLadder::setPitch(int pitch) {
     m_pitch = pitch;
     emit pitchChanged(m_pitch);
@@ -31,55 +30,57 @@ void PerformanceHorizonLadder::setPitch(int pitch) {
 }
 
 
-static QSGGeometry* make_rectangle(int height,int width){
+static QSGGeometry* make_rectangle(int height,int width) {
     QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 4);
     geometry->setDrawingMode(GL_LINES);
     geometry->setLineWidth(10);
     geometry->vertexDataAsPoint2D()[0].set(0, 0);
-    geometry->vertexDataAsPoint2D()[1].set(0,width);
-    geometry->vertexDataAsPoint2D()[2].set(height,width);
-    geometry->vertexDataAsPoint2D()[3].set(height,0);
+    geometry->vertexDataAsPoint2D()[1].set(0, width);
+    geometry->vertexDataAsPoint2D()[2].set(height, width);
+    geometry->vertexDataAsPoint2D()[3].set(height, 0);
     return geometry;
 }
 
-struct Vec2{
-    float x=0;
-    float y=0;
+struct Vec2 {
+    float x = 0;
+    float y = 0;
 };
-static void append_horizontal_line_with_middle_space(std::vector<Vec2>& buff,float x_off,float width,float y_off,float middle_space,float height){
-    const float middle_space_half=middle_space/2;
+
+static void append_horizontal_line_with_middle_space(std::vector<Vec2>& buff,float x_off,float width,float y_off,float middle_space,float height) {
+    const float middle_space_half = middle_space/2;
     //left up line
-    buff.push_back({x_off+0,y_off});
-    buff.push_back({x_off+0,y_off+height});
+    buff.push_back({x_off+0, y_off});
+    buff.push_back({x_off+0, y_off+height});
     //left to middle
-    buff.push_back({x_off+0,y_off});
-    buff.push_back({x_off+width/2.0f-middle_space_half,y_off});
+    buff.push_back({x_off+0, y_off});
+    buff.push_back({x_off+width/2.0f - middle_space_half, y_off});
     // middle to right
-    buff.push_back({x_off+width/2.0f+middle_space_half,y_off});
-     buff.push_back({x_off+width,y_off});
+    buff.push_back({x_off+width/2.0f + middle_space_half, y_off});
+     buff.push_back({x_off+width, y_off});
     // right up
-    buff.push_back({x_off+width,y_off});
-    buff.push_back({x_off+width,y_off+height});
+    buff.push_back({x_off+width, y_off});
+    buff.push_back({x_off+width, y_off+height});
 }
-static void append_horizontal_line_with_middle_space_and_dashes(std::vector<Vec2>& buff,float x_off,float width,float y_off,float middle_space,float height){
-    const float middle_space_half=middle_space/2;
-    const float horizontal_line_length=width/2.0f-middle_space_half;
-    const float dash_length=horizontal_line_length/5.0f;
+
+static void append_horizontal_line_with_middle_space_and_dashes(std::vector<Vec2>& buff,float x_off,float width,float y_off,float middle_space,float height) {
+    const float middle_space_half = middle_space/2;
+    const float horizontal_line_length = width/2.0f - middle_space_half;
+    const float dash_length = horizontal_line_length / 5.0f;
     //left down line
     buff.push_back({x_off+0,y_off});
     buff.push_back({x_off+0,y_off-height});
     //left to middle,dashes
     int count=0;
-    for(int i=0;i<3;i++){
+    for (int i=0;i < 3;i++) {
         buff.push_back({x_off+dash_length*count,y_off});
         count++;
         buff.push_back({x_off+dash_length*count,y_off});
         count++;
     }
     // middle to right
-    count=0;
-    for(int i=0;i<3;i++){
-        const float start=x_off+width/2.0f+middle_space_half;
+    count = 0;
+    for (int i = 0; i < 3; i++) {
+        const float start = x_off + width/2.0f + middle_space_half;
         buff.push_back({start+dash_length*count,y_off});
         count++;
         buff.push_back({start+dash_length*count,y_off});
@@ -90,12 +91,12 @@ static void append_horizontal_line_with_middle_space_and_dashes(std::vector<Vec2
     buff.push_back({x_off+width,y_off-height});
 }
 
-static void append_horizontal_line(std::vector<Vec2>& buff,float x,float y,float width){
+static void append_horizontal_line(std::vector<Vec2>& buff,float x,float y,float width) {
     buff.push_back({x,y});
     buff.push_back({x+width,y});
 }
 
-static std::vector<Vec2> make_circle(int segments,float center_x,float center_y,float radius){
+static std::vector<Vec2> make_circle(int segments,float center_x,float center_y,float radius) {
     std::vector<Vec2> vertices;
     float step = 6.283185f/segments;
     float angle = 0.0f;
@@ -110,9 +111,9 @@ static std::vector<Vec2> make_circle(int segments,float center_x,float center_y,
     return vertices;
 }
 
-static QSGGeometry* qsggeometry_from_array(const std::vector<Vec2>& vec){
+static QSGGeometry* qsggeometry_from_array(const std::vector<Vec2>& vec) {
      QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), vec.size());
-     for(int i=0;i<vec.size();i++){
+     for (int i = 0; i < vec.size(); i++) {
          geometry->vertexDataAsPoint2D()[i].set(vec[i].x,vec[i].y);
      }
      geometry->setDrawingMode(GL_LINES);
@@ -120,7 +121,7 @@ static QSGGeometry* qsggeometry_from_array(const std::vector<Vec2>& vec){
      return geometry;
 }
 
-static QSGGeometry* make_line(int width,int height){
+static QSGGeometry* make_line(int width,int height) {
     QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
     geometry->setDrawingMode(GL_LINES);
     geometry->setLineWidth(3);
@@ -133,17 +134,24 @@ static QSGGeometry* make_line(int width,int height){
 
 QSGNode *PerformanceHorizonLadder::updatePaintNode(QSGNode *n, QQuickItem::UpdatePaintNodeData *)
 {
-    if(!m_base_node){
+    // node for the ladder lines, translated
+    QSGGeometryNode *ladders_geom_node = nullptr;
+    // node for the center indicator, never translated
+    QSGGeometryNode *center_indicator = nullptr;
+    QSGTransformNode* tf_node = nullptr;
+    //
+    QSGFlatColorMaterial *flat_color_material = nullptr;
+    if (!m_base_node) {
         m_base_node = new QSGNode();
-        m_ladders_geom_node = new QSGGeometryNode();
-        m_tf_node = new QSGTransformNode();
-        m_center_indicator = new QSGGeometryNode();
+        ladders_geom_node = new QSGGeometryNode();
+        center_indicator = new QSGGeometryNode();
+        tf_node = new QSGTransformNode();
 
-        m_flat_color_material = new QSGFlatColorMaterial();
-        m_flat_color_material->setColor(QColor(255, 255, 255));
+        flat_color_material  = new QSGFlatColorMaterial();
+        flat_color_material->setColor(QColor(255, 255, 255));
 
-        const auto m_width=width();
-        const auto m_height=height();
+        const auto m_width = width();
+        const auto m_height = height();
 
         {
             //auto geometry=make_rectangle(width(),height());
@@ -168,10 +176,11 @@ QSGNode *PerformanceHorizonLadder::updatePaintNode(QSGNode *n, QQuickItem::Updat
 
             auto geometry=qsggeometry_from_array(vertices);
 
-            m_ladders_geom_node->setGeometry(geometry);
-            m_ladders_geom_node->setFlag(QSGNode::OwnsGeometry);
-            m_ladders_geom_node->setMaterial(m_flat_color_material);
-            m_ladders_geom_node->setFlag(QSGNode::OwnsMaterial);
+            ladders_geom_node->setGeometry(geometry);
+            ladders_geom_node->setFlag(QSGNode::OwnsGeometry);
+            ladders_geom_node->setMaterial(flat_color_material );
+            // TODO(anxs): cause app crash just remove for now
+            //m_ladders_geom_node->setFlag(QSGNode::OwnsMaterial);
         }
         {
             //auto vertices=std::vector<Vec2>();
@@ -182,39 +191,33 @@ QSGNode *PerformanceHorizonLadder::updatePaintNode(QSGNode *n, QQuickItem::Updat
             auto geometry=qsggeometry_from_array(vertices);
             geometry->setDrawingMode(GL_LINE_STRIP);
             geometry->setLineWidth(1);
-            m_center_indicator->setGeometry(geometry);
-            m_center_indicator->setFlag(QSGNode::OwnsGeometry);
-            m_center_indicator->setMaterial(m_flat_color_material);
-            m_center_indicator->setFlag(QSGNode::OwnsMaterial);
+            center_indicator->setGeometry(geometry);
+            center_indicator->setFlag(QSGNode::OwnsGeometry);
+            center_indicator->setMaterial(flat_color_material );
+            center_indicator->setFlag(QSGNode::OwnsMaterial);
         }
 
-        m_base_node->appendChildNode(m_tf_node);
-        m_base_node->appendChildNode(m_center_indicator);
-        m_tf_node->appendChildNode(m_ladders_geom_node);
+        m_base_node->appendChildNode(tf_node);
+        m_base_node->appendChildNode(center_indicator);
+        tf_node->appendChildNode(ladders_geom_node);
     }
-    //qDebug()<<"LOOOL";
 
     QRectF rect(boundingRect());
 
     //QSGGeometry::updateColoredRectGeometry(node->geometry(),rect);
     //QSGGeometry::updateTexturedRectGeometry(node->geometry(), rect, texture_coords);
-    m_ladders_geom_node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
+    ladders_geom_node->markDirty(QSGNode::DirtyGeometry | QSGNode::DirtyMaterial);
 
     {
-        auto matrix=QMatrix4x4();
+        auto matrix = QMatrix4x4();
         matrix.setToIdentity();
-        matrix.translate(width()/2,height()/2,0);
-        matrix.rotate(m_roll*-1,QVector3D(0,0,1));
-        matrix.translate(-width()/2,-height()/2,0);
+        matrix.translate(width()/2, height()/2, 0);
+        matrix.rotate(m_roll*-1, QVector3D(0,0,1));
+        matrix.translate(-width()/2, -height()/2,0);
 
-        matrix.translate({0.0f,m_pitch*18.0f,0.0f});
-        m_tf_node->setMatrix(matrix);
+        matrix.translate({0.0f, m_pitch*18.0f, 0.0f});
+        tf_node->setMatrix(matrix);
     }
 
-    //QTransform transform_centerOfWindow( 1, 0, 0, 1, width()/2, height()/2 );
-    //transform_centerOfWindow.rotate(m_pitch*18.0f);
-
-    //QMetaObject::invokeMethod(node, "update", Qt::QueuedConnection);
-    //return node;
     return m_base_node;
 }
