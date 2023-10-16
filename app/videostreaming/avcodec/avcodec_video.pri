@@ -4,9 +4,6 @@ LIBS += -lavcodec -lavutil -lavformat
 # TODO dirty
 LIBS += -lGLESv2 -lEGL
 
-# just using the something something webrtc from stephen was the easiest solution.
-#include(../../lib/h264/h264.pri)
-
 SOURCES += \
     $$PWD/QSGVideoTextureItem.cpp \
     $$PWD/gl/gl_shaders.cpp \

@@ -26,7 +26,7 @@ Rectangle {
         return "N"
     }
 
-    function get_features_string(){
+    function get_features_string() {
         var ret=""
         ret+="AVCODEC:"+yes_or_no_as_string(QOPENHD_ENABLE_VIDEO_VIA_AVCODEC)+", "
         ret+="MMAL:"+yes_or_no_as_string(QOPENHD_HAVE_MMAL)+", "

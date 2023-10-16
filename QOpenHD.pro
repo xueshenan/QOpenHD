@@ -192,13 +192,12 @@ DISTFILES += \
     app/util/README.md \
     app/videostreaming/README.md \
     app/videostreaming/README.txt \
-    app/videostreaming/gst_qmlglsink/gst_video.pri \
     app/videostreaming/vscommon/vscommon.pri \
     extra_build_qmake.sh \
-    lib/h264nal/h264nal.pri \
     qml/qtquickcontrols2.conf \
     qml/ui/qmldir \
-
+#    app/videostreaming/gst_qmlglsink/gst_video.pri \
+#    lib/h264nal/h264nal.pri \
 
 iOSBuild {
     QMAKE_INFO_PLIST    = ios/Info.plist

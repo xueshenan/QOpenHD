@@ -3,10 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include <QFileInfo>
+#include <QDebug>
 
-#include "qdebug.h"
-#include "avcodec_helper.hpp"
-#include "../common/TimeHelper.hpp"
+#include "common/TimeHelper.hpp"
 #include "common/util_fs.h"
 
 #include "texturerenderer.h"
@@ -17,8 +16,6 @@
 #include "../logging/logmessagesmodel.h"
 
 #include "ExternalDecodeService.hpp"
-
-static enum AVPixelFormat wanted_hw_pix_fmt = AV_PIX_FMT_NONE;
 
 static constexpr auto MAX_FED_TIMESTAMPS_QUEUE_SIZE = 100;
 
@@ -76,8 +73,8 @@ void MppDecoder::constant_decode()
         // this is always for primary video, unless switching is enabled
         auto stream_config = settings.primary_stream_config;
 
-        // Does h264 and h265 custom rtp parse, but uses avcodec for decode
-        open_and_decode_until_error_custom_rtp(settings);
+        // Does h264 and h265 custom rtp parse, and uses mpp for decode
+        open_and_decode_until_error(settings);
 
         qDebug()<<"Decode stopped,restarting";
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -335,39 +332,6 @@ FreeBuffer:
     return 0;
 }
 
-int MppDecoder::decode_config_data(AVPacket *packet)
-{
-     const int ret_avcodec_send_packet = avcodec_send_packet(_decoder_ctx, packet);
-     return ret_avcodec_send_packet;
-}
-
-
-bool MppDecoder::feed_rtp_frame_if_available()
-{
-    auto frame = _rtp_receiver->get_next_frame();
-    if (frame) {
-        {
-            // parsing delay
-            const auto delay = std::chrono::steady_clock::now()-frame->get_nal().creationTime;
-            avg_parse_time.add(delay);
-            avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/,const std::string message) {
-                //qDebug()<<name.c_str()<<":"<<message.c_str();
-                DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
-            });
-        }
-        AVPacket *pkt = av_packet_alloc();
-        pkt->data = (uint8_t*)frame->get_nal().getData();
-        pkt->size = frame->get_nal().getSize();
-        const auto beforeFeedFrameUs = getTimeUs();
-        pkt->pts = beforeFeedFrameUs;
-        add_feed_timestamp(pkt->pts);
-        avcodec_send_packet(_decoder_ctx, pkt);
-        av_packet_free(&pkt);
-        return true;
-    }
-    return false;
-}
-
 void MppDecoder::on_new_frame(AVFrame *frame)
 {
     {
@@ -390,7 +354,7 @@ void MppDecoder::on_new_frame(AVFrame *frame)
             // PI and SW decoer will just slently start outputting garbage frames
             // if the width/ height changes during RTP streaming
             qDebug()<<"Need to restart the decoder, width / heght changed";
-            request_restart=true;
+            request_restart = true;
         }
     }
 }
@@ -406,7 +370,7 @@ void MppDecoder::reset_before_decode_start()
 }
 
 // https://ffmpeg.org/doxygen/3.3/decode_video_8c-example.html
-void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig &settings)
+void MppDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStreamConfig &settings)
 {
     bool ret = init_mpp_decoder();
     assert(ret);
@@ -451,7 +415,6 @@ void MppDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper
 finish:
      qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-end loop";
      _rtp_receiver = nullptr;
-     avcodec_free_context(&_decoder_ctx);
 }
 
 void MppDecoder::add_feed_timestamp(int64_t ts)

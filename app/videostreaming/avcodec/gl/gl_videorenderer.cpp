@@ -53,30 +53,6 @@ void GL_VideoRenderer::init_gl() {
 void GL_VideoRenderer::update_texture_yuv420P_yuv422P(AVFrame* frame) {
   assert(frame);
   assert(is_AV_PIX_FMT_YUV42XP(frame->format));
-  /*if(false){
-	if(yuv_420_p_sw_frame_texture.sdl_texture== nullptr){
-	  yuv_420_p_sw_frame_texture.sdl_texture = SDL_CreateTexture(sdl_renderer,
-																 SDL_PIXELFORMAT_YV12,
-									SDL_TEXTUREACCESS_STREAMING,
-									frame->width,
-									frame->height);
-	  assert(yuv_420_p_sw_frame_texture.sdl_texture!= nullptr);
-	}
-	if(frame->format==AV_PIX_FMT_YUV420P){
-	  SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_JPEG);
-	}else{
-	  SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
-	}
-	SDL_UpdateYUVTexture(yuv_420_p_sw_frame_texture.sdl_texture, nullptr,
-						 frame->data[0],
-						 frame->linesize[0],
-						 frame->data[1],
-						 frame->linesize[1],
-						 frame->data[2],
-						 frame->linesize[2]);
-	yuv_420_p_sw_frame_texture.has_valid_image= true;
-	return;
-  }*/
   const GLuint frame_width=frame->width;
   const GLuint frame_height=frame->height;
   //const GLuint frame_width=frame->linesize[0];
@@ -105,7 +81,7 @@ void GL_VideoRenderer::update_texture_yuv420P_yuv422P(AVFrame* frame) {
   for(int i=0;i<3;i++){
 	if(yuv_420_p_sw_frame_texture.textures[i]==0){
 	  glGenTextures(1,&yuv_420_p_sw_frame_texture.textures[i]);
-	  assert(yuv_420_p_sw_frame_texture.textures[i]>0);
+      //assert(yuv_420_p_sw_frame_texture.textures[i]>0);
 	}
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	const auto test_texture_target=GL_TEXTURE_2D;

@@ -11,11 +11,6 @@
 #include <atomic>
 #include <qtimer.h>
 
-#include "avcodec_helper.hpp"
-#include "QOpenHDVideoHelper.hpp"
-#include "../../common/TimeHelper.hpp"
-
-#include "rtp/rtpreceiver.h"
 extern "C" {
 #include <rk_mpi.h>
 #include "mpp_mem.h"
@@ -24,6 +19,10 @@ extern "C" {
 #include "mpp_common.h"
 #include "mpplib/utils/mpi_dec_utils.h"
 }
+
+#include "avcodec_decoder.h"
+#include "QOpenHDVideoHelper.hpp"
+#include "rtp/rtpreceiver.h"
 
 typedef struct {
     MppCtx          ctx;
@@ -57,8 +56,6 @@ public:
     // called when app terminates
     void terminate();
 private:
-    AVCodecContext *_decoder_ctx = nullptr;
-    const AVCodec *_decoder = nullptr;
     std::unique_ptr<std::thread> _decode_thread = nullptr;
 private:
     // The logic of this decode "machine" is simple:
@@ -72,9 +69,7 @@ private:
     // This will stop performing the lockstep. In this case, either the decoder cannot decode
     // the video without buffering (which is bad, but some IP camera(s) create such a stream)
     // or the underlying decode implementation (e.g. rpi foundation h264 !? investigate) has some quirks.
-    int decode_and_wait_for_frame(AVPacket *packet,std::optional<std::chrono::steady_clock::time_point> parse_time=std::nullopt);
-    // Just send data to the codec, do not check or wait for a frame
-    int decode_config_data(AVPacket *packet);
+    int decode_and_wait_for_frame(AVPacket *packet, std::optional<std::chrono::steady_clock::time_point> parse_time=std::nullopt);
     // Called every time we get a new frame from the decoder, do what you wish here ;)
     void on_new_frame(AVFrame* frame);
     // simle restart, e.g. when the video codec or the video resolution has changed we need to break
@@ -107,10 +102,8 @@ private:
     std::unique_ptr<RTPReceiver> _rtp_receiver = nullptr;
 private:
     // Custom rtp parse (and therefore limited to h264 and h265)
-    // AND always goes the avcodec decode route (SW decode or avcodec mmal decode).
-    // Used for SW decode, for MMAL h264 we go the custom rtp WITHOUT avcodec route by default !
-    void open_and_decode_until_error_custom_rtp(const QOpenHDVideoHelper::VideoStreamConfig &settings);
-    bool feed_rtp_frame_if_available();
+    // And always goes the mpp decode route.
+    void open_and_decode_until_error(const QOpenHDVideoHelper::VideoStreamConfig &settings);
 private:
     void reset_before_decode_start();
 private:
