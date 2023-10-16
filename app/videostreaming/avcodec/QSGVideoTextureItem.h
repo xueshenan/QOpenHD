@@ -32,10 +32,10 @@ private slots:
 private:
     void releaseResources() override;
 
-    TextureRenderer* m_renderer=nullptr;
+    TextureRenderer* _renderer = nullptr;
 public slots:
-    void m_QQuickWindow_beforeRendering();
-    void m_QQuickWindow_beforeRenderPassRecording();
+    void QQuickWindow_beforeRendering();
+    void QQuickWindow_beforeRenderPassRecording();
 private:
 #ifdef ENABLE_MPP_DECODER
     std::unique_ptr<MppDecoder> _decoder = nullptr;

@@ -10,7 +10,7 @@
 
 
 QSGVideoTextureItem::QSGVideoTextureItem():
-    m_renderer(nullptr)
+    _renderer(nullptr)
 {
     connect(this, &QQuickItem::windowChanged, this, &QSGVideoTextureItem::handleWindowChanged);
 #ifdef ENABLE_MPP_DECODER
@@ -25,7 +25,7 @@ QSGVideoTextureItem::QSGVideoTextureItem():
 void QSGVideoTextureItem::handleWindowChanged(QQuickWindow *win)
 {
     qDebug()<<"QSGVideoTextureItem::handleWindowChanged";
-    if (win) {
+    if (win != nullptr) {
         connect(win, &QQuickWindow::beforeSynchronizing, this, &QSGVideoTextureItem::sync, Qt::DirectConnection);
         //connect(win, &QQuickWindow::sceneGraphInvalidated, this, &QSGVideoTextureItem::cleanup, Qt::DirectConnection);
         // Ensure we start with cleared to black. The squircle's blend mode relies on this.
@@ -39,38 +39,34 @@ void QSGVideoTextureItem::handleWindowChanged(QQuickWindow *win)
 void QSGVideoTextureItem::releaseResources()
 {
      qDebug()<<"QSGVideoTextureItem::releaseResources";
-     /*if(m_renderer){
-         delete(m_renderer);
-         m_renderer=nullptr;
-     }*/
 }
 
 
 void QSGVideoTextureItem::sync()
 {
-    if (!m_renderer) {
-        m_renderer = &TextureRenderer::instance();
-        connect(window(), &QQuickWindow::beforeRendering, this, &QSGVideoTextureItem::m_QQuickWindow_beforeRendering, Qt::DirectConnection);
-        connect(window(), &QQuickWindow::beforeRenderPassRecording, this, &QSGVideoTextureItem::m_QQuickWindow_beforeRenderPassRecording, Qt::DirectConnection);
+    if (_renderer == nullptr) {
+        _renderer = &TextureRenderer::instance();
+        connect(window(), &QQuickWindow::beforeRendering, this, &QSGVideoTextureItem::QQuickWindow_beforeRendering, Qt::DirectConnection);
+        connect(window(), &QQuickWindow::beforeRenderPassRecording, this, &QSGVideoTextureItem::QQuickWindow_beforeRenderPassRecording, Qt::DirectConnection);
         //X
         //QRenderStats::instance().registerOnWindow(window());
     }
-    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
+    _renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
 }
 
-void QSGVideoTextureItem::m_QQuickWindow_beforeRendering()
+void QSGVideoTextureItem::QQuickWindow_beforeRendering()
 {
-    if(m_renderer){
-        m_renderer->initGL(window());
+    if (_renderer != nullptr) {
+        _renderer->initGL(window());
     }
 }
 
-void QSGVideoTextureItem::m_QQuickWindow_beforeRenderPassRecording()
+void QSGVideoTextureItem::QQuickWindow_beforeRenderPassRecording()
 {
-    if(m_renderer){
+    if (_renderer != nullptr) {
         //qDebug()<<"Rotation:"<<QQuickItem::rotation();
         const auto screen_rotation=QOpenHDVideoHelper::get_display_rotation();
-        m_renderer->paint(window(),screen_rotation);
+        _renderer->paint(window(),screen_rotation);
     }
     // always trigger a repaint, otherwise QT "thinks" nothing has changed since it doesn't
     // know about the OpenGL commands we do here
