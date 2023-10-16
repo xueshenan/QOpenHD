@@ -36,7 +36,6 @@ typedef struct {
     RK_S64          first_frm;
 
     size_t          max_usage;
-    float           frame_rate;
     RK_S64          elapsed_time;
     RK_S64          delay;
 } MpiDecLoopData;
@@ -69,15 +68,17 @@ private:
     // This will stop performing the lockstep. In this case, either the decoder cannot decode
     // the video without buffering (which is bad, but some IP camera(s) create such a stream)
     // or the underlying decode implementation (e.g. rpi foundation h264 !? investigate) has some quirks.
-    int decode_and_wait_for_frame(AVPacket *packet, std::optional<std::chrono::steady_clock::time_point> parse_time=std::nullopt);
+    int decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffer, std::optional<std::chrono::steady_clock::time_point> parse_time=std::nullopt);
+    // Just send data to the codec, do not check or wait for a frame
+    int decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_data);
     // Called every time we get a new frame from the decoder, do what you wish here ;)
     void on_new_frame(AVFrame* frame);
     // simle restart, e.g. when the video codec or the video resolution has changed we need to break
     // out of a running "constant_decode_xx" loop
-    std::atomic<bool> request_restart = false;
+    std::atomic<bool> _request_restart = false;
     // Completely stop (Exit QOpenHD)
     bool _should_terminate=false;
-    bool use_frame_timestamps_for_latency=false;
+    bool _use_frame_timestamps_for_latency = false;
     AvgCalculator avg_decode_time{"Decode"};
     AvgCalculator avg_parse_time{"Parse&Enqueue"};
     static constexpr std::chrono::milliseconds kDefaultFrameTimeout{33*2};
@@ -92,13 +93,6 @@ private:
     int _last_frame_width = -1;
     int _last_frame_height = -1;
 private:
-    // timestamp used during feed frame
-    void add_feed_timestamp(int64_t ts);
-
-    // Must be big enough to catch frame buffering+1, small enough to fit in memory
-    // and be searchable with a for loop. !00 sounds like a good fit.
-    std::deque<int64_t> _fed_timestamps_queue;
-private:
     std::unique_ptr<RTPReceiver> _rtp_receiver = nullptr;
 private:
     // Custom rtp parse (and therefore limited to h264 and h265)
@@ -108,6 +102,7 @@ private:
     void reset_before_decode_start();
 private:
     bool init_mpp_decoder();
+private:
     MpiDecTestCmd _cmd_ctx;
     MpiDecLoopData _dec_data;
 };

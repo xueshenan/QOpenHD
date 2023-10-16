@@ -17,8 +17,6 @@
 
 #include "ExternalDecodeService.hpp"
 
-static constexpr auto MAX_FED_TIMESTAMPS_QUEUE_SIZE = 100;
-
 MppDecoder::MppDecoder(QObject *parent) : QObject(parent) {
 }
 
@@ -47,7 +45,7 @@ void MppDecoder::terminate()
     // This will stop the constant_decode as soon as the current running decode_until_error loop returns
     _should_terminate = true;
     // This will break out of a running "decode until error" loop if there is one currently running
-    request_restart = true;
+    _request_restart = true;
     if (_decode_thread) {
         // Wait for everything to cleanup and stop
         _decode_thread->join();
@@ -60,7 +58,7 @@ void MppDecoder::timer_check_settings_changed_callback()
     if (_last_video_settings != new_settings) {
         // We just request a restart from the video (break out of the current constant_decode() loop,
         // and restart with the new settings.
-        request_restart = true;
+        _request_restart = true;
         _last_video_settings = new_settings;
     }
 }
@@ -81,30 +79,21 @@ void MppDecoder::constant_decode()
     }
 }
 
-int MppDecoder::decode_and_wait_for_frame(AVPacket *packet, std::optional<std::chrono::steady_clock::time_point> parse_time)
+int MppDecoder::decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffer, std::optional<std::chrono::steady_clock::time_point> parse_time)
 {
     const auto beforeFeedFrame = std::chrono::steady_clock::now();
-
-    if (parse_time != std::nullopt) {
-        const auto delay = beforeFeedFrame-parse_time.value();
-        avg_parse_time.add(delay);
-        avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/, const std::string message) {
-            DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
-        });
-    }
-
-    const auto beforeFeedFrameUs = getTimeUs();
-    packet->pts = beforeFeedFrameUs;
-    add_feed_timestamp(packet->pts);
 
     MppCtx ctx  = _dec_data.ctx;
     MppApi *mpi = _dec_data.mpi;
 
+    uint8_t *data = (uint8_t*)nalu_buffer->get_nal().getData();
+    int32_t size = nalu_buffer->get_nal().getSize();
+
     MppPacket mpp_packet = _dec_data.packet;
-    mpp_packet_set_data(mpp_packet, packet->data);
-    mpp_packet_set_size(mpp_packet, packet->size);
-    mpp_packet_set_pos(mpp_packet, packet->data);
-    mpp_packet_set_length(mpp_packet, packet->size);
+    mpp_packet_set_data(mpp_packet, data);
+    mpp_packet_set_size(mpp_packet, size);
+    mpp_packet_set_pos(mpp_packet, data);
+    mpp_packet_set_length(mpp_packet, size);
 
     MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
     if (ret == MPP_OK) {
@@ -112,6 +101,16 @@ int MppDecoder::decode_and_wait_for_frame(AVPacket *packet, std::optional<std::c
             _dec_data.first_pkt = mpp_time();
         }
     }
+
+    if (parse_time != std::nullopt) {
+        const auto delay = beforeFeedFrame - parse_time.value();
+        avg_parse_time.add(delay);
+        avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/, const std::string message) {
+            DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
+        });
+    }
+
+    const auto beforeFeedFrameUs = getTimeUs();
 
     // Poll until we get the frame out
     bool gotFrame = false;
@@ -127,7 +126,7 @@ try_again:
                 msleep(1);
                 goto try_again;
             }
-            printf("%p decode_get_frame failed too much time\n", ctx);
+            qDebug()<< ctx << " decode_get_frame failed too much time";
         }
         if (ret != MPP_OK) {
             qDebug() << "decode_get_frame failed ret " << ret;
@@ -251,22 +250,24 @@ try_again:
                 }
             }
 
-            if (!use_frame_timestamps_for_latency) {
+            if (!_use_frame_timestamps_for_latency) {
                 const auto x_delay = std::chrono::steady_clock::now() - beforeFeedFrame;
                 // qDebug()<<"(True) decode delay(wait):"<<((float)std::chrono::duration_cast<std::chrono::microseconds>(x_delay).count()/1000.0f)<<" ms";
                 avg_decode_time.add(x_delay);
             }
             avg_decode_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string name, const std::string message) {
                 Q_UNUSED(name)
-                qDebug()<<name.c_str()<<":"<<message.c_str();
+                //qDebug()<<name.c_str()<<":"<<message.c_str();
                 DecodingStatistcs::instance().set_decode_time(message.c_str());
             });
+
+            //const auto beforeConvertUs = getTimeUs();
 
             RK_U32 width = mpp_frame_get_width(frame);
             RK_U32 height = mpp_frame_get_height(frame);
             RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
             RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
-            MppFrameFormat fmt = mpp_frame_get_fmt(frame);      //yuv420sp
+            MppFrameFormat fmt = mpp_frame_get_fmt(frame);      //MPP_FMT_YUV420SP(NV12)
             MppBuffer buffer = mpp_frame_get_buffer(frame);
             if (buffer == NULL) {
                 mpp_frame_deinit(&frame);
@@ -278,37 +279,6 @@ try_again:
 
             // alloc output frame and set info
             AVFrame *out_frame = av_frame_alloc();
-            AVFrame *ref_frame = av_frame_alloc();
-            out_frame->width = width;
-            out_frame->height = height;
-            out_frame->format = AV_PIX_FMT_YUV420P;
-            int ret = av_frame_get_buffer(out_frame, 16);
-            if (ret != 0) {
-                char buf[1024] = {0};
-                av_strerror(ret, buf, sizeof(buf));
-                qDebug() << buf;
-                //TODO need free
-                break;
-            }
-            assert(out_frame->data[0] != NULL);
-            auto y_pos = out_frame->data[0];
-            for (int i = 0; i < height; i++, base_y += hor_stride) {
-                memcpy(y_pos, base_y, out_frame->linesize[0]);
-                y_pos += out_frame->linesize[0];
-            }
-            auto u_pos = out_frame->data[1];
-            auto v_pos = out_frame->data[2];
-            for (int i = 0; i < height / 2; i++, base_c += hor_stride) {
-                for (int j = 0; j < width / 2; j++) {
-                    *u_pos = base_c[j * 2];
-                    *v_pos = base_c[j* 2 + 1];
-                    u_pos++;
-                    v_pos++;
-                }
-            }
-
-            av_frame_ref(ref_frame, out_frame);
-
             if (out_frame == NULL) {
                 // NOTE: It is a common practice to not care about OOM, and this is the best approach in my opinion.
                 // but ffmpeg uses malloc and returns error codes, so we keep this practice here.
@@ -317,14 +287,57 @@ try_again:
                 return AVERROR(ENOMEM);
             }
 
+            AVFrame *ref_frame = av_frame_alloc();
+            out_frame->width = width;
+            out_frame->height = height;
+            out_frame->format = AV_PIX_FMT_YUV420P;
             out_frame->pts = beforeFeedFrameUs;
+            // alloc new yuv420p frame
+            int ret = av_frame_get_buffer(out_frame, 16);
+            if (ret != 0) {
+                char buf[1024] = {0};
+                av_strerror(ret, buf, sizeof(buf));
+                qDebug() << buf;
+
+                av_frame_free(&ref_frame);
+                av_frame_free(&out_frame);
+                mpp_frame_deinit(&frame);
+                break;
+            }
+
+            assert(out_frame->data[0] != NULL);
+            auto y_pos = out_frame->data[0];
+            if (hor_stride == width) {
+                memcpy(y_pos, base_y, out_frame->height * hor_stride);
+            }
+            else {
+                for (uint32_t i = 0; i < height; i++, base_y += hor_stride) {
+                    memcpy(y_pos, base_y, out_frame->linesize[0]);
+                    y_pos += out_frame->linesize[0];
+                }
+            }
+            auto u_pos = out_frame->data[1];
+            auto v_pos = out_frame->data[2];
+            memset(u_pos, 128, out_frame->linesize[1] * height / 2);
+            memset(v_pos, 128, out_frame->linesize[2] * height / 2);
+//            for (uint32_t i = 0; i < height / 2; i++, base_c += hor_stride) {
+//                for (uint32_t j = 0; j < width / 2; j++) {
+//                    *u_pos = base_c[j * 2];
+//                    *v_pos = base_c[j* 2 + 1];
+//                    u_pos++;
+//                    v_pos++;
+//                }
+//            }
+            av_frame_ref(ref_frame, out_frame);
+
+            //qDebug() << "end convert: " << getTimeUs() - beforeConvertUs << " ns";
             // display frame
             on_new_frame(ref_frame);
-FreeBuffer:
-            av_frame_free(&ref_frame);
-            av_frame_free(&out_frame);
 
             n_times_we_tried_getting_a_frame_this_time++;
+
+            av_frame_free(&ref_frame);
+            av_frame_free(&out_frame);
             mpp_frame_deinit(&frame);
         }
     }
@@ -341,20 +354,17 @@ void MppDecoder::on_new_frame(AVFrame *frame)
         //qDebug()<<"Got frame:"<<ss.str().c_str();
     }
 
-    // Once we got the first frame, reduce the log level
-    av_log_set_level(AV_LOG_WARNING);
-
     //qDebug()<<debug_frame(frame).c_str();
     TextureRenderer::instance().queue_new_frame_for_display(frame);
+
     if (_last_frame_width == -1 || _last_frame_height == -1) {
         _last_frame_width = frame->width;
         _last_frame_height = frame->height;
     } else {
         if (_last_frame_width != frame->width || _last_frame_height != frame->height) {
-            // PI and SW decoer will just slently start outputting garbage frames
             // if the width/ height changes during RTP streaming
             qDebug()<<"Need to restart the decoder, width / heght changed";
-            request_restart = true;
+            _request_restart = true;
         }
     }
 }
@@ -366,7 +376,6 @@ void MppDecoder::reset_before_decode_start()
     DecodingStatistcs::instance().reset_all_to_default();
     _last_frame_width = -1;
     _last_frame_height = -1;
-    _fed_timestamps_queue.clear();
 }
 
 // https://ffmpeg.org/doxygen/3.3/decode_video_8c-example.html
@@ -381,21 +390,21 @@ void MppDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStre
     // This thread pulls frame(s) from the rtp decoder and therefore should have high priority
     SchedulingHelper::setThreadParamsMaxRealtime();
 
-    qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-begin loop";
-    _rtp_receiver=std::make_unique<RTPReceiver>(stream_config.udp_rtp_input_port,
-                                              stream_config.udp_rtp_input_ip_address,
-                                              stream_config.video_codec==1,
-                                              settings.generic.dev_feed_incomplete_frames_to_decoder);
+    qDebug() << "MppDecoder::open_and_decode_until_error_custom_rtp()-begin loop";
+    _rtp_receiver = std::make_unique<RTPReceiver>(stream_config.udp_rtp_input_port,
+                                                  stream_config.udp_rtp_input_ip_address,
+                                                  stream_config.video_codec == 1,
+                                                  settings.generic.dev_feed_incomplete_frames_to_decoder);
 
      reset_before_decode_start();
      DecodingStatistcs::instance().set_decoding_type("HW");
-     AVPacket *pkt=av_packet_alloc();
-     assert(pkt != NULL);
+
+     bool has_config_data = false;
      while (true)
      {
          // We break out of this loop if someone requested a restart
-         if (request_restart) {
-             request_restart = false;
+         if (_request_restart) {
+             _request_restart = false;
              goto finish;
          }
          // or the decode config changed and we need a restart
@@ -408,20 +417,42 @@ void MppDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStre
              // No buff after X seconds
              continue;
          }
-         pkt->data = (uint8_t*)buf->get_nal().getData();
-         pkt->size = buf->get_nal().getSize();
-         decode_and_wait_for_frame(pkt, buf->get_nal().creationTime);
+         if (!has_config_data) {
+              std::shared_ptr<std::vector<uint8_t>> keyframe_buf = _rtp_receiver->get_config_data();
+              if(keyframe_buf==nullptr){
+                  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                  continue;
+              }
+              qDebug()<<"Got decode data (before keyframe)";
+              decode_config_data(keyframe_buf);
+              has_config_data=true;
+              continue;
+         }else{
+            decode_and_wait_for_frame(buf, buf->get_nal().creationTime);
+         }
      }
 finish:
      qDebug()<<"MppDecoder::open_and_decode_until_error_custom_rtp()-end loop";
      _rtp_receiver = nullptr;
 }
 
-void MppDecoder::add_feed_timestamp(int64_t ts)
-{
-    _fed_timestamps_queue.push_back(ts);
-    if (_fed_timestamps_queue.size() >= MAX_FED_TIMESTAMPS_QUEUE_SIZE) {
-        _fed_timestamps_queue.pop_front();
+int MppDecoder::decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_data) {
+    MppCtx ctx  = _dec_data.ctx;
+    MppApi *mpi = _dec_data.mpi;
+
+    uint8_t *data = config_data->data();
+    int32_t size = config_data->size();
+    MppPacket mpp_packet = _dec_data.packet;
+    mpp_packet_set_data(mpp_packet, data);
+    mpp_packet_set_size(mpp_packet, size);
+    mpp_packet_set_pos(mpp_packet, data);
+    mpp_packet_set_length(mpp_packet, size);
+
+    MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
+    if (ret == MPP_OK) {
+        if (!_dec_data.first_pkt) {
+            _dec_data.first_pkt = mpp_time();
+        }
     }
 }
 

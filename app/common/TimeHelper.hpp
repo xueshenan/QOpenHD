@@ -335,12 +335,12 @@ public:
     }
 };
 
-static uint64_t  getTimeUs(){
+static uint64_t getTimeUs(){
     const auto time=std::chrono::steady_clock::now().time_since_epoch();
     return std::chrono::duration_cast<std::chrono::microseconds>(time).count();
 }
 
-static uint64_t  getTimeMs(){
+static uint64_t getTimeMs(){
     return getTimeUs()/1000;
 }
 

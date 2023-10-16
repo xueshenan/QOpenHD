@@ -1,17 +1,17 @@
 #ifndef TEXTURERENDERER_H
 #define TEXTURERENDERER_H
 
-
-#include <QObject>
-#include <QtQuick/QQuickItem>
-#include <QtQuick/QQuickWindow>
 #include <memory>
 #include <chrono>
 #include <mutex>
+#include <QObject>
+#include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickWindow>
+
 
 #include "gl/gl_videorenderer.h"
 
-#include "../common/TimeHelper.hpp"
+#include "common/TimeHelper.hpp"
 
 class TextureRenderer : public QObject
 {

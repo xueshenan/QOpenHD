@@ -118,10 +118,10 @@ void RTPReceiver::queue_data(const uint8_t* nalu_data,const std::size_t nalu_dat
         }
         // If we have all config data, start storing video frames
         // We can drop things we don't need for decoding frames though
-        //if(nalu.is_config())return;
-        if(nalu.is_aud())return;
-        if(nalu.is_sei())return;
-        if(nalu.is_dps())return;
+        if (nalu.is_config()) return;
+        if (nalu.is_aud()) return;
+        if (nalu.is_sei()) return;
+        if (nalu.is_dps()) return;
         // recalculate rough fps in X seconds intervalls:
         m_estimate_fps_calculator.on_new_frame();
         if(m_estimate_fps_calculator.time_since_last_recalculation()>std::chrono::seconds(2)){
@@ -130,17 +130,17 @@ void RTPReceiver::queue_data(const uint8_t* nalu_data,const std::size_t nalu_dat
             DecodingStatistcs::instance().set_estimate_rtp_fps({fps_as_string.c_str()});
         }
         //qDebug()<<"Queue size:"<<m_data_queue.size_approx();
-        if(m_new_nalu_cb){
+        if (m_new_nalu_cb) {
             // Use the cb approach
             m_new_nalu_cb(nalu);
-        }else{
+        } else {
             // Use the queue approach
-            if(!m_data_queue.try_enqueue(std::make_shared<NALUBuffer>(nalu))){
+            if (!m_data_queue.try_enqueue(std::make_shared<NALUBuffer>(nalu))) {
                 // If we cannot push a frame onto this queue, it means the decoder cannot keep up what we want to provide to it
                 n_dropped_frames++;
                 qDebug()<<"Dropping incoming frame, total:"<<n_dropped_frames;
                 DecodingStatistcs::instance().set_n_decoder_dropped_frames(n_dropped_frames);
-                const auto elapsed=std::chrono::steady_clock::now()-m_last_log_hud_dropped_frame;
+                const auto elapsed = std::chrono::steady_clock::now() - m_last_log_hud_dropped_frame;
                 if(elapsed>std::chrono::seconds(3)){
                     HUDLogMessagesModel::instance().add_message_warning("Decoder unhealthy-reduce load");
                     m_last_log_hud_dropped_frame=std::chrono::steady_clock::now();

@@ -118,30 +118,30 @@ public:
        return (get_nal_unit_type() == NALUnitType::H264::NAL_UNIT_TYPE_PPS);
    }
    // VPS NALUs are only possible in H265
-   bool isVPS()const{
+   bool isVPS() const {
        assert(IS_H265_PACKET);
        return get_nal_unit_type()==NALUnitType::H265::NAL_UNIT_VPS;
    }
-   bool is_aud()const{
+   bool is_aud() const {
        if(IS_H265_PACKET){
            return get_nal_unit_type()==NALUnitType::H265::NAL_UNIT_ACCESS_UNIT_DELIMITER;
        }
        return (get_nal_unit_type() == NALUnitType::H264::NAL_UNIT_TYPE_AUD);
    }
-   bool is_sei()const{
+   bool is_sei() const {
        if(IS_H265_PACKET){
            return get_nal_unit_type()==NALUnitType::H265::NAL_UNIT_PREFIX_SEI || get_nal_unit_type()==NALUnitType::H265::NAL_UNIT_SUFFIX_SEI;
        }
        return (get_nal_unit_type() == NALUnitType::H264::NAL_UNIT_TYPE_SEI);
    }
-   bool is_dps()const{
-       if(IS_H265_PACKET){
+   bool is_dps() const {
+       if(IS_H265_PACKET) {
            // doesn't exist in h265
            return false;
        }
        return (get_nal_unit_type() == NALUnitType::H264::NAL_UNIT_TYPE_DPS);
    }
-   bool is_config(){
+   bool is_config() const {
        return isSPS() || isPPS() || (IS_H265_PACKET && isVPS());
    }
    // keyframe / IDR frame
@@ -155,10 +155,10 @@ public:
        }
        return false;
    }
-   bool is_frame_but_not_keyframe()const{
-       const auto nut=get_nal_unit_type();
-       if(IS_H265_PACKET)return false;
-       return (nut==NALUnitType::H264::NAL_UNIT_TYPE_CODED_SLICE_NON_IDR);
+   bool is_frame_but_not_keyframe() const {
+       const auto nut = get_nal_unit_type();
+       if (IS_H265_PACKET) return false;
+       return (nut == NALUnitType::H264::NAL_UNIT_TYPE_CODED_SLICE_NON_IDR);
    }
    std::array<int,2> sps_get_width_height()const{
        assert(isSPS());
@@ -197,7 +197,7 @@ public:
 };
 
 // Copies the nalu data into its own c++-style managed buffer.
-class NALUBuffer{
+class NALUBuffer {
 public:
     NALUBuffer(const uint8_t* data,int data_len,bool is_h265,std::chrono::steady_clock::time_point creation_time){
         m_data=std::make_shared<std::vector<uint8_t>>(data,data+data_len);
