@@ -8,9 +8,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickWindow>
 
-
 #include "gl/gl_videorenderer.h"
-
 #include "common/TimeHelper.hpp"
 
 class TextureRenderer : public QObject
@@ -20,7 +18,7 @@ public:
     // DIRTY, FIXME
     static TextureRenderer& instance();
 
-    void setViewportSize(const QSize &size) { m_viewportSize = size; }
+    void setViewportSize(const QSize &size) { _viewport_size = size; }
     // create and link the shaders
     void initGL(QQuickWindow *window);
     // draw function
@@ -35,34 +33,34 @@ public:
     // that uses the HW composer, we need to become "transparent" again - or rather
     // not draw any video with OpenGL, which will have the same effect
     void clear_all_video_textures_next_frame(){
-        m_clear_all_video_textures_next_frame=true;
+        _clear_all_video_textures_next_frame = true;
     }
 private:
-    QSize m_viewportSize;
-    int m_index=0;
-    std::chrono::steady_clock::time_point last_frame=std::chrono::steady_clock::now();
+    QSize _viewport_size;
+    int _index = 0;
+    std::chrono::steady_clock::time_point _last_frame = std::chrono::steady_clock::now();
     //
-    std::unique_ptr<GL_VideoRenderer> gl_video_renderer=nullptr;
+    std::unique_ptr<GL_VideoRenderer> _gl_video_renderer = nullptr;
     //
-    bool initialized=false;
-    int renderCount=0;
+    bool _initialized = false;
+    int _render_count = 0;
 private:
-    std::mutex latest_frame_mutex;
-    AVFrame* m_latest_frame=nullptr;
+    std::mutex _latest_frame_mutex;
+    AVFrame* _latest_frame = nullptr;
     AVFrame* fetch_latest_decoded_frame();
 private:
     struct DisplayStats{
-        int n_frames_rendered=0;
-        int n_frames_dropped=0;
+        int n_frames_rendered = 0;
+        int n_frames_dropped = 0;
         // Delay between frame was given to the egl render <-> we uploaded it to the texture (if not dropped)
         //AvgCalculator delay_until_uploaded{"Delay until uploaded"};
         // Delay between frame was given to the egl renderer <-> swap operation returned (it is handed over to the hw composer)
         //AvgCalculator delay_until_swapped{"Delay until swapped"};
         AvgCalculator decode_and_render{"Decode and render"}; //Time picked up by GL Thread
       };
-    DisplayStats m_display_stats;
-    bool dev_draw_alternating_rgb_dummy_frames=false;
-    bool m_clear_all_video_textures_next_frame=false;
+    DisplayStats _display_stats;
+    bool _dev_draw_alternating_rgb_dummy_frames = false;
+    bool _clear_all_video_textures_next_frame = false;
 };
 
 #endif // TEXTURERENDERER_H

@@ -70,7 +70,7 @@ private:
     // or the underlying decode implementation (e.g. rpi foundation h264 !? investigate) has some quirks.
     int decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffer, std::optional<std::chrono::steady_clock::time_point> parse_time=std::nullopt);
     // Just send data to the codec, do not check or wait for a frame
-    int decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_data);
+    bool decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_data);
     // Called every time we get a new frame from the decoder, do what you wish here ;)
     void on_new_frame(AVFrame* frame);
     // simle restart, e.g. when the video codec or the video resolution has changed we need to break

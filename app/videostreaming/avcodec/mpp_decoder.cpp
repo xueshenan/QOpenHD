@@ -439,7 +439,7 @@ finish:
      _rtp_receiver = nullptr;
 }
 
-int MppDecoder::decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_data) {
+bool MppDecoder::decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_data) {
     MppCtx ctx  = _dec_data.ctx;
     MppApi *mpi = _dec_data.mpi;
 
@@ -452,11 +452,7 @@ int MppDecoder::decode_config_data(std::shared_ptr<std::vector<uint8_t>> config_
     mpp_packet_set_length(mpp_packet, size);
 
     MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
-    if (ret == MPP_OK) {
-        if (!_dec_data.first_pkt) {
-            _dec_data.first_pkt = mpp_time();
-        }
-    }
+    return ret == MPP_OK;
 }
 
 bool MppDecoder::init_mpp_decoder() {
