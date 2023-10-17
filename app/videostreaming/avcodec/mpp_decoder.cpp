@@ -271,7 +271,7 @@ try_again:
             RK_U32 height = mpp_frame_get_height(frame);
             RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
             RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
-            MppFrameFormat fmt = mpp_frame_get_fmt(frame);      //MPP_FMT_YUV420SP(NV12)
+//            MppFrameFormat fmt = mpp_frame_get_fmt(frame);      //MPP_FMT_YUV420SP(NV12)
             MppBuffer buffer = mpp_frame_get_buffer(frame);
             if (buffer == NULL) {
                 mpp_frame_deinit(&frame);
@@ -279,7 +279,7 @@ try_again:
             }
             RK_U8 *base = (RK_U8 *)mpp_buffer_get_ptr(buffer);
             RK_U8 *base_y = base;
-            RK_U8 *base_c = base + hor_stride * ver_stride;
+            RK_U8 *base_uv = base + hor_stride * ver_stride;
 
             // alloc output frame and set info
             AVFrame *out_frame = av_frame_alloc();
@@ -294,9 +294,9 @@ try_again:
             AVFrame *ref_frame = av_frame_alloc();
             out_frame->width = width;
             out_frame->height = height;
-            out_frame->format = AV_PIX_FMT_YUV420P;
+            out_frame->format = AV_PIX_FMT_NV12;
             out_frame->pts = beforeFeedFrameUs;
-            // alloc new yuv420p frame
+            // alloc new frame
             int ret = av_frame_get_buffer(out_frame, 16);
             if (ret != 0) {
                 char buf[1024] = {0};
@@ -308,31 +308,31 @@ try_again:
                 mpp_frame_deinit(&frame);
                 break;
             }
+            av_frame_ref(ref_frame, out_frame);
 
             assert(out_frame->data[0] != NULL);
             auto y_pos = out_frame->data[0];
             if (hor_stride == width) {
-                memcpy(y_pos, base_y, out_frame->height * hor_stride);
+                memcpy(y_pos, base_y, width * height);
             }
             else {
                 for (uint32_t i = 0; i < height; i++, base_y += hor_stride) {
-                    memcpy(y_pos, base_y, out_frame->linesize[0]);
+                    memcpy(y_pos, base_y, width);
                     y_pos += out_frame->linesize[0];
                 }
             }
-            auto u_pos = out_frame->data[1];
-            auto v_pos = out_frame->data[2];
-            memset(u_pos, 128, out_frame->linesize[1] * height / 2);
-            memset(v_pos, 128, out_frame->linesize[2] * height / 2);
-//            for (uint32_t i = 0; i < height / 2; i++, base_c += hor_stride) {
-//                for (uint32_t j = 0; j < width / 2; j++) {
-//                    *u_pos = base_c[j * 2];
-//                    *v_pos = base_c[j* 2 + 1];
-//                    u_pos++;
-//                    v_pos++;
-//                }
-//            }
-            av_frame_ref(ref_frame, out_frame);
+
+            auto uv_pos = out_frame->data[1];
+            if (hor_stride == width) {
+                memcpy(uv_pos, base_uv, height/2 * hor_stride);
+            }
+            else {
+                for (uint32_t i = 0; i < height/2; i++, base_uv += hor_stride) {
+                    memcpy(uv_pos, base_uv, width / 2);
+                    uv_pos += out_frame->linesize[1];
+                }
+            }
+
 
             //qDebug() << "end convert: " << getTimeUs() - beforeConvertUs << " ns";
             // display frame

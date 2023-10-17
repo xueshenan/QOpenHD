@@ -6,7 +6,7 @@
 #define HELLO_DRMPRIME__GL_SHADERS_H_
 
 extern "C" {
-#include "glhelp.h"
+    #include "glhelp.h"
 }
 #include <string>
 
@@ -30,6 +30,7 @@ class GL_shaders {
 	GLint pos=-1;
 	GLint uvs=-1;
   };
+
   // NV12
   // 2 separate planes (textures) : Y and U,V
   struct NV12Shader{
@@ -39,6 +40,7 @@ class GL_shaders {
 	GLint s_texture_y=-1;
 	GLint s_texture_uv=-1;
   };
+
   // YUV 420P (As defined in AV_PIX_FMT_YUV420P)
   // Y,U,V are in 3 separate planes (textures)
   struct YUV420PShader{

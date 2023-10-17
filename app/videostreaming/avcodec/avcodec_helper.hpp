@@ -2,8 +2,8 @@
 // Created by consti10 on 04.09.22.
 //
 
-#ifndef HELLO_DRMPRIME__AVCODEC_HELPER_HPP_
-#define HELLO_DRMPRIME__AVCODEC_HELPER_HPP_
+#ifndef AVCODEC_HELPER_HPP_H
+#define AVCODEC_HELPER_HPP_H
 
 // Include all the "av" stuff we need
 extern "C" {
@@ -17,10 +17,10 @@ extern "C" {
 #include <libavutil/buffer.h>
 #include <libavutil/frame.h>
 //
-#include "libavutil/frame.h"
-#include "libavutil/hwcontext.h"
-#include "libavutil/hwcontext_drm.h"
-#include "libavutil/pixdesc.h"
+#include <libavutil/frame.h>
+#include <libavutil/hwcontext.h>
+#include <libavutil/hwcontext_drm.h>
+#include <libavutil/pixdesc.h>
 }
 
 #include <iostream>
@@ -29,11 +29,11 @@ extern "C" {
 
 // For some reaseon av_frame_cropped_width doesn't exit on ffmpeg default on ubuntu
 // but on rpi, it does !
-static int x_av_frame_cropped_width(const AVFrame* frame){
+static int x_av_frame_cropped_width(const AVFrame* frame) {
   return frame->width;
 }
 
-static int x_av_frame_cropped_height(const AVFrame* frame){
+static int x_av_frame_cropped_height(const AVFrame* frame) {
   return frame->height;
 }
 
@@ -46,20 +46,20 @@ static std::string safe_av_hwdevice_get_type_name(enum AVHWDeviceType type){
   return {tmp};
 }
 
-static std::string av_error_as_string(int err){
+static std::string av_error_as_string(int err) {
     char buf[1024];
     av_make_error_string(buf,1024,err);
     return std::string(buf);
 }
 
-static std::string safe_av_get_pix_fmt_name(enum AVPixelFormat pix_fmt){
+static std::string safe_av_get_pix_fmt_name(enum AVPixelFormat pix_fmt) {
   auto tmp= av_get_pix_fmt_name(pix_fmt);
   if(tmp== nullptr){
 	return "null";
   }
   return {tmp};
 }
-static std::string safe_av_get_colorspace_name(enum AVColorSpace val){
+static std::string safe_av_get_colorspace_name(enum AVColorSpace val) {
   auto tmp= av_get_colorspace_name(val);
   if(tmp== nullptr){
 	return "null";
@@ -67,7 +67,7 @@ static std::string safe_av_get_colorspace_name(enum AVColorSpace val){
   return {tmp};
 }
 
-static std::string all_av_hwframe_transfer_formats(AVBufferRef *hwframe_ctx){
+static std::string all_av_hwframe_transfer_formats(AVBufferRef *hwframe_ctx) {
   std::stringstream ss;
   if(hwframe_ctx== nullptr){
 	ss<<"Frame has no hwframe_ctx\n";
@@ -88,7 +88,7 @@ static std::string all_av_hwframe_transfer_formats(AVBufferRef *hwframe_ctx){
   return ss.str();
 }
 
-static std::string all_av_hwdevice_types(){
+static std::string all_av_hwdevice_types() {
   std::stringstream ss;
   AVHWDeviceType tmp_type=AV_HWDEVICE_TYPE_NONE;
   ss<< "Available HW device types:";
@@ -99,7 +99,7 @@ static std::string all_av_hwdevice_types(){
   return ss.str();
 }
 
-static std::string all_formats_to_string(const enum AVPixelFormat *pix_fmts){
+static std::string all_formats_to_string(const enum AVPixelFormat *pix_fmts) {
   std::stringstream ss;
   ss<<"PixelFormats:[";
   if(pix_fmts== nullptr){
@@ -115,7 +115,7 @@ static std::string all_formats_to_string(const enum AVPixelFormat *pix_fmts){
   return ss.str();
 }
 
-static std::string all_hw_configs_for_this_codec(const AVCodec *decoder){
+static std::string all_hw_configs_for_this_codec(const AVCodec *decoder) {
     std::stringstream ss;
     ss<<"all_hw_configs_for_this_codec:\n";
     for (int i = 0;; i++) {
@@ -152,21 +152,24 @@ static std::string debug_av_packet(const AVPacket* packet){
     ss<<" dts:"<<packet->dts<<"";
     return ss.str();
 }
-static bool is_AV_PIX_FMT_YUV420P(int format){
+static bool is_AV_PIX_FMT_YUV420P(int format) {
     // ffmpeg still has YUVJ420 even though marked as to be removed, and we get it in case of mjpeg decode
-    return format==AV_PIX_FMT_YUV420P || format==AV_PIX_FMT_YUVJ420P;
+    return format == AV_PIX_FMT_YUV420P || format == AV_PIX_FMT_YUVJ420P;
 }
-static bool is_AV_PIX_FMT_YUV422P(int format){
+static bool is_AV_PIX_FMT_YUV422P(int format) {
     // ffmpeg still has YUVJ420 even though marked as to be removed, and we get it in case of mjpeg decode
-    return format==AV_PIX_FMT_YUV422P || format==AV_PIX_FMT_YUVJ422P;
+    return format == AV_PIX_FMT_YUV422P || format == AV_PIX_FMT_YUVJ422P;
 }
 
+static bool is_AV_PIX_FMT_NV12(int format) {
+    return format == AV_PIX_FMT_NV12;
+}
 
-static bool is_AV_PIX_FMT_YUV42XP( int format){
+static bool is_AV_PIX_FMT_YUV42XP( int format) {
     return is_AV_PIX_FMT_YUV420P(format) || is_AV_PIX_FMT_YUV422P(format);
 }
 
-static std::string debug_frame(const AVFrame* frame){
+static std::string debug_frame(const AVFrame* frame) {
     std::stringstream ss;
     ss<<""<<frame->width<<"x"<<frame->height;
     ss<<"crop bottom:"<<frame->crop_bottom<<" left:"<<frame->crop_left<<" top:"<<frame->crop_top<<" right:"<<frame->crop_right;
@@ -174,16 +177,4 @@ static std::string debug_frame(const AVFrame* frame){
     return ss.str();
 }
 
-/*struct XBestDecoder{
-    const AVCodec *decoder;
-    bool is_hw;
-    enum AVPixelFormat wanted_hw_pix_fmt;
-    AVHWDeviceType kAvhwDeviceType;
-};
-
-static XBestDecoder find_best_decoder(const AVCodec *decoder){
-
-}*/
-
-
-#endif //HELLO_DRMPRIME__AVCODEC_HELPER_HPP_
+#endif //AVCODEC_HELPER_HPP_H

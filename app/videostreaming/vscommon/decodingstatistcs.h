@@ -35,7 +35,7 @@ class DecodingStatistcs : public QObject
     L_RO_PROP(int, estimate_keyframe_interval, set_estimate_keyframe_interval, -1)
     // Not link related - n frame(s) we had to drop since the decoder cannot keep up with
     // the data stream that is provided to it
-    L_RO_PROP(int,n_decoder_dropped_frames,set_n_decoder_dropped_frames,-1)
+    L_RO_PROP(int,n_decoder_dropped_frames,set_n_decoder_dropped_frames, -1)
 public:
     explicit DecodingStatistcs(QObject *parent = nullptr);
     static DecodingStatistcs& instance();

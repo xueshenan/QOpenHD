@@ -138,16 +138,16 @@ void RTPReceiver::queue_data(const uint8_t* nalu_data,const std::size_t nalu_dat
             if (!m_data_queue.try_enqueue(std::make_shared<NALUBuffer>(nalu))) {
                 // If we cannot push a frame onto this queue, it means the decoder cannot keep up what we want to provide to it
                 n_dropped_frames++;
-                qDebug()<<"Dropping incoming frame, total:"<<n_dropped_frames;
+                qDebug() << "Dropping incoming frame, total:" << n_dropped_frames;
                 DecodingStatistcs::instance().set_n_decoder_dropped_frames(n_dropped_frames);
                 const auto elapsed = std::chrono::steady_clock::now() - m_last_log_hud_dropped_frame;
-                if(elapsed>std::chrono::seconds(3)){
+                if (elapsed > std::chrono::seconds(3)) {
                     HUDLogMessagesModel::instance().add_message_warning("Decoder unhealthy-reduce load");
-                    m_last_log_hud_dropped_frame=std::chrono::steady_clock::now();
+                    m_last_log_hud_dropped_frame = std::chrono::steady_clock::now();
                 }
             }
         }
-    }else{
+    } else {
         // We don't have all config data yet, drop anything that is not config data.
         m_keyframe_finder->saveIfKeyFrame(nalu);
     }
