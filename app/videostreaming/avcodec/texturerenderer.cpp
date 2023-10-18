@@ -25,7 +25,13 @@ void TextureRenderer::initGL(QQuickWindow *window)
     if (!_initialized) {
         _initialized = true;
         QSGRendererInterface *rif = window->rendererInterface();
-	qDebug() << "graphics api " << rif->graphicsApi();
+        if (rif->graphicsApi() == QSGRendererInterface::Software) {
+            qDebug() << "graphics render as software";
+        }
+        else if (rif->graphicsApi() == QSGRendererInterface::OpenGL) {
+            qDebug() << "graphics render as opengl";
+        }
+
         //Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL);
 
         _gl_video_renderer=std::make_unique<GL_VideoRenderer>();

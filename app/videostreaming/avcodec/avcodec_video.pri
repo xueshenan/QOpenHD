@@ -32,7 +32,7 @@ LinuxBuild {
     contains(QMAKE_HOST.arch, aarch64) {
         message("compile for linux arm64 with mpp support")
 
-#        DEFINES += ENABLE_MPP_DECODER
+        DEFINES += ENABLE_MPP_DECODER
 
         SOURCES += \
             $$PWD/mpp_decoder.cpp \
