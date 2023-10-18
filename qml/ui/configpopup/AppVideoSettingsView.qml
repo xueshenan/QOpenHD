@@ -33,12 +33,11 @@ ScrollView {
                 id: itemsVideoCodec
                 ListElement { text: "H264"; }
                 ListElement { text: "H265";  }
-                ListElement { text: "MJPEG"; }
             }
 
             SettingBaseElement{
-                m_short_description: "Video codec primary"
-                m_long_description: "Video codec of primary stream (main video). Automatically fetched from OpenHD."
+                m_short_description: "Video codec"
+                m_long_description: "Video codec of stream."
                 ComboBox {
                     id: selectVideoCodecPrimary
                     width: 320
@@ -62,8 +61,8 @@ ScrollView {
                 }
             }
             SettingBaseElement{
-                m_short_description: "Primary video force SW"
-                m_long_description: "Force SW decode for primary video stream (unless it already defaulted to sw decode). Can fix bug(s) in rare hardware incompability cases."
+                m_short_description: "Use software decoder"
+                m_long_description: "Force software decode for video stream. Can fix bug(s) in rare hardware incompability cases."
                 Switch {
                     width: 32
                     height: elementHeight
@@ -76,8 +75,8 @@ ScrollView {
                 }
             }
             SettingBaseElement{
-                m_short_description: "Primary video udp in port"
-                m_long_description: "UDP port where qopenhd listens for video data for the primary video stream"
+                m_short_description: "Video port"
+                m_long_description: "Video port for video stream data"
                 SpinBox {
                     height: elementHeight
                     width: 210
@@ -95,8 +94,8 @@ ScrollView {
             }
 
             SettingBaseElement{
-                m_short_description: "Scale primary video to fit"
-                m_long_description: "Fit the primary video to the exact screen size (discards actual video aspect ratio,aka video is a bit distorted). Not supported on all platforms / implementations. Might require a restart."
+                m_short_description: "Scale video to fit"
+                m_long_description: "Fit the video to the exact screen size (discards actual video aspect ratio,aka video is a bit distorted). Not supported on all platforms / implementations. Might require a restart."
 
                 Switch {
                     width: 32
@@ -189,20 +188,6 @@ ScrollView {
                 }
             }
 
-            // dirty
-            SettingBaseElement{
-                m_short_description: "dev_rpi_use_external_omx_decode_service"
-                //m_long_description: "On by default, RPI specific."
-                Switch {
-                    width: 32
-                    height: elementHeight
-                    anchors.rightMargin: Qt.inputMethod.visible ? 96 : 36
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: settings.dev_rpi_use_external_omx_decode_service
-                    onCheckedChanged: settings.dev_rpi_use_external_omx_decode_service = checked
-                }
-            }
             SettingBaseElement{
                 m_short_description: "dev_always_use_generic_external_decode_service"
                 //m_long_description: "Video decode is not done via QOpenHD, but rather in an extra service (started and stopped by QOpenHD). For platforms other than rpi"

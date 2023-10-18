@@ -28,7 +28,7 @@ Settings {
     property int qopenhd_primary_video_rtp_input_port: 5600
     property string qopenhd_primary_video_rtp_input_ip: "127.0.0.1"
     // Video codec of the primary video stream (main window).
-    property int qopenhd_primary_video_codec: 0 //0==h264,1==h265,2==MJPEG, other (error) default to h264
+    property int qopenhd_primary_video_codec: 0 //0==h264,1==h265, other (error) default to h264
     property bool qopenhd_primary_video_force_sw: false
 
     // When this one is set to true, we read a file (where you can then write your custom rx gstreamer pipeline
@@ -42,7 +42,6 @@ Settings {
     property bool dev_feed_incomplete_frames_to_decoder:false;
 
     // dirty, perhaps temporary
-    property bool dev_rpi_use_external_omx_decode_service: true;
     property bool dev_always_use_generic_external_decode_service: false
 
     // The user can controll the width and height the secondary video has when in minimized state

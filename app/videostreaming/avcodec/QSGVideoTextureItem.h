@@ -37,11 +37,9 @@ public slots:
     void QQuickWindow_beforeRendering();
     void QQuickWindow_beforeRenderPassRecording();
 private:
-#ifdef ENABLE_MPP_DECODER
-    std::unique_ptr<MppDecoder> _decoder = nullptr;
-#else
-    std::unique_ptr<AVCodecDecoder> _decoder = nullptr;
-#endif
+    std::unique_ptr<MppDecoder> _hw_decoder = nullptr;
+    std::unique_ptr<AVCodecDecoder> _sw_decoder = nullptr;
+    bool _use_sw_decoder = false;
 };
 
 #endif // QSGVideoTextureItem_H

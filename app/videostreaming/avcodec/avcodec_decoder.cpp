@@ -123,10 +123,6 @@ void AVCodecDecoder::constant_decode()
         auto stream_config=settings.primary_stream_config;
 
          bool do_custom_rtp=settings.generic.dev_use_low_latency_parser_when_possible;
-         if(stream_config.video_codec==QOpenHDVideoHelper::VideoCodecMJPEG){
-             // we got no support for mjpeg in our custom rtp parser
-             do_custom_rtp=false;
-        }
         // On a couple of embedded platform(s) we do not do the decoding in qopenhd,
         // but by using a "decode service" that renders / composes the video into a plane behind qopenhd
         // on rpi, this is by far the most performant / low latency option
@@ -135,22 +131,12 @@ void AVCodecDecoder::constant_decode()
         if(settings.generic.dev_always_use_generic_external_decode_service){
             use_external_decode_service=true;
         }
-        bool is_rpi=false;
-#ifdef IS_PLATFORM_RPI
-        is_rpi=true;
-#endif // IS_PLATFORM_RPI
-        if(is_rpi && settings.generic.dev_rpi_use_external_omx_decode_service){
-            use_external_decode_service=true;
-        }
-        if(use_external_decode_service){
-            dirty_generic_decode_via_external_decode_service(settings);
+
+        if(do_custom_rtp){
+            // Does h264 and h265 custom rtp parse, but uses avcodec for decode
+            open_and_decode_until_error_custom_rtp(settings);
         }else{
-            if(do_custom_rtp){
-                // Does h264 and h265 custom rtp parse, but uses avcodec for decode
-                open_and_decode_until_error_custom_rtp(settings);
-            }else{
-                open_and_decode_until_error(settings);
-            }
+            open_and_decode_until_error(settings);
         }
         qDebug()<<"Decode stopped,restarting";
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -543,12 +529,8 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
     }
 
     std::string selected_decoding_type="?";
-    if(stream_config.enable_software_video_decoder ||
-            // for mjpeg we always use sw decode r.n, since for some reason the "fallback" to sw decode doesn't work here
-            // and also the PI cannot do HW mjpeg decode anyways at least no one bothered to fix ffmpeg for it.
-            stream_config.video_codec==QOpenHDVideoHelper::VideoCodecMJPEG
-            ){
-        qDebug()<<"User wants SW decode / mjpeg";
+    if (stream_config.enable_software_video_decoder) {
+        qDebug()<<"User wants SW decode";
         decoder_ctx->get_format  = get_sw_format;
         selected_decoding_type="SW";
     }else{
