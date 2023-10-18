@@ -47,7 +47,7 @@ void TextureRenderer::paint(QQuickWindow *window, int rotation_degree)
     const auto frame_time_us = std::chrono::duration_cast<std::chrono::microseconds>(delta).count();
     const float frame_time_ms = ((float)frame_time_us)/1000.0f;
     Q_UNUSED(frame_time_ms)
-    // qDebug()<<" TextureRenderer::paint() frame time:"<<frame_time_ms<<"ms";
+//    qDebug()<<" TextureRenderer::paint() frame time:"<<frame_time_ms<<"ms";
     _render_count++;
 
    // Play nice with the RHI. Not strictly needed when the scenegraph uses
@@ -64,7 +64,7 @@ void TextureRenderer::paint(QQuickWindow *window, int rotation_degree)
        DecodingStatistcs::instance().set_decode_and_render_time("-1");
        _clear_all_video_textures_next_frame = false;
    }
-   //glClear(GL_COLOR_BUFFER_BIT |GL_DEPTH_BUFFER_BIT| GL_STENCIL_BUFFER_BIT);
+
    AVFrame* new_frame = fetch_latest_decoded_frame();
    if (new_frame != nullptr) {
         // Note : the update might free the frame, so we gotta store the timestamp before !
@@ -87,8 +87,8 @@ void TextureRenderer::paint(QQuickWindow *window, int rotation_degree)
    auto video_tex_width = _gl_video_renderer->get_current_video_width();
    auto video_tex_height = _gl_video_renderer->get_current_video_height();
    if (rotation_degree == 90 || rotation_degree == 270) {
-     // just swap them around when rotated to get the right viewport
-     std::swap(video_tex_width,video_tex_height);
+        // just swap them around when rotated to get the right viewport
+        std::swap(video_tex_width,video_tex_height);
    }
    if (video_tex_width > 0 && video_tex_height > 0) {
        const auto viewport = helper::ratio::calculate_viewport(_viewport_size.width(), _viewport_size.height(),video_tex_width,video_tex_height,QOpenHDVideoHelper::get_primary_video_scale_to_fit());

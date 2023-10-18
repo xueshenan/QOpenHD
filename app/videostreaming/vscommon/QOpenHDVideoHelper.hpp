@@ -52,8 +52,6 @@ struct GenericVideoSettings {
     //
     bool dev_enable_custom_pipeline = false;
     std::string dev_custom_pipeline = "";
-    //
-    bool dev_use_low_latency_parser_when_possible = true;
     // feed incomplete frame(s) to the decoder, in contrast to only only feeding intact frames,
     // but not caring about missing previous frames
     bool dev_feed_incomplete_frames_to_decoder = false;
@@ -67,7 +65,6 @@ struct GenericVideoSettings {
     bool operator==(const GenericVideoSettings &o) const {
        return  this->dev_enable_custom_pipeline==o.dev_enable_custom_pipeline &&
                this->dev_custom_pipeline==o.dev_custom_pipeline &&
-               this->dev_use_low_latency_parser_when_possible == o.dev_use_low_latency_parser_when_possible &&
                this->dev_feed_incomplete_frames_to_decoder == o.dev_feed_incomplete_frames_to_decoder &&
                this->dev_always_use_generic_external_decode_service==o.dev_always_use_generic_external_decode_service &&
                this->extra_screen_rotation == o.extra_screen_rotation;
@@ -148,7 +145,6 @@ static GenericVideoSettings read_generic_from_settings() {
     GenericVideoSettings _videoStreamConfig;
 
     _videoStreamConfig.dev_enable_custom_pipeline = settings.value("dev_enable_custom_pipeline",false).toBool();
-    _videoStreamConfig.dev_use_low_latency_parser_when_possible = settings.value("dev_use_low_latency_parser_when_possible",true).toBool();
     //
     _videoStreamConfig.dev_always_use_generic_external_decode_service = settings.value("dev_always_use_generic_external_decode_service", false).toBool();
     _videoStreamConfig.extra_screen_rotation=get_display_rotation();

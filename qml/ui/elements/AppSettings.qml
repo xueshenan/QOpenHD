@@ -36,9 +36,7 @@ Settings {
     property bool dev_enable_custom_pipeline: false
 
     property bool dev_draw_alternating_rgb_dummy_frames: false;
-    // r.n only works on h264 / h265 and on select video stream(s)
-    // does not work on mjpeg, but as far as I can see, mjpeg doesn't suffer from the "one frame buffering" issue in avcodec
-    property bool dev_use_low_latency_parser_when_possible: true;
+
     property bool dev_feed_incomplete_frames_to_decoder:false;
 
     // dirty, perhaps temporary

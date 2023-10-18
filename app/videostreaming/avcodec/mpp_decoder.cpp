@@ -330,7 +330,14 @@ try_again:
                     uv_pos += out_frame->linesize[1];
                 }
             }
-
+            static int save_to_file = 1;
+            if (save_to_file) {
+                FILE *fp = fopen("/home/orangepi/work/out.yuv", "wb");
+                fwrite(out_frame->data[0], 1, width * height, fp);
+                fwrite(out_frame->data[1], 1, width * height / 2, fp);
+                fclose(fp);
+                save_to_file = 0;
+            }
 
 //            qDebug() << "end convert: " << getTimeUs() - beforeConvertUs << " ns";
             // display frame

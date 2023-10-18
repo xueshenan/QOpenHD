@@ -387,7 +387,7 @@ int main(int argc, char *argv[]) {
 
     QRenderStats::instance().register_to_root_window(engine);
 
-    LogMessagesModel::instanceOHD().addLogMessage("QOpenHD","running");
+    LogMessagesModel::instanceOHD().addLogMessage("QOpenHD", "running");
     const int retval = app.exec();
 
     return retval;

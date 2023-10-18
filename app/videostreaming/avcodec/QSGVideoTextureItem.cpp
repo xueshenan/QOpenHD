@@ -58,8 +58,6 @@ void QSGVideoTextureItem::sync()
         _renderer = &TextureRenderer::instance();
         connect(window(), &QQuickWindow::beforeRendering, this, &QSGVideoTextureItem::QQuickWindow_beforeRendering, Qt::DirectConnection);
         connect(window(), &QQuickWindow::beforeRenderPassRecording, this, &QSGVideoTextureItem::QQuickWindow_beforeRenderPassRecording, Qt::DirectConnection);
-        //X
-        //QRenderStats::instance().registerOnWindow(window());
     }
     _renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
 }

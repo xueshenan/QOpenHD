@@ -38,6 +38,7 @@ public:
 private:
     QSize _viewport_size;
     int _index = 0;
+    // last frame draw time
     std::chrono::steady_clock::time_point _last_frame = std::chrono::steady_clock::now();
     //
     std::unique_ptr<GL_VideoRenderer> _gl_video_renderer = nullptr;

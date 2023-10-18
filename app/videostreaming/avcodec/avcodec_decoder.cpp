@@ -122,22 +122,17 @@ void AVCodecDecoder::constant_decode()
         // this is always for primary video, unless switching is enabled
         auto stream_config=settings.primary_stream_config;
 
-         bool do_custom_rtp=settings.generic.dev_use_low_latency_parser_when_possible;
         // On a couple of embedded platform(s) we do not do the decoding in qopenhd,
         // but by using a "decode service" that renders / composes the video into a plane behind qopenhd
         // on rpi, this is by far the most performant / low latency option
-        bool use_external_decode_service=false;
         // choice - enable regardless of platform, usefull for development
+        bool use_external_decode_service = false;
         if(settings.generic.dev_always_use_generic_external_decode_service){
-            use_external_decode_service=true;
+            use_external_decode_service = true;
         }
 
-        if(do_custom_rtp){
-            // Does h264 and h265 custom rtp parse, but uses avcodec for decode
-            open_and_decode_until_error_custom_rtp(settings);
-        }else{
-            open_and_decode_until_error(settings);
-        }
+        // Does h264 and h265 custom rtp parse, but uses avcodec for decode
+        open_and_decode_until_error_custom_rtp(settings);
         qDebug()<<"Decode stopped,restarting";
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -613,8 +608,7 @@ int AVCodecDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoS
     DecodingStatistcs::instance().set_decode_time("-1");
     DecodingStatistcs::instance().set_primary_stream_frame_format("-1");
     avcodec_free_context(&decoder_ctx);
-    qDebug()<<"avcodec_free_context done";
-    avformat_close_input(&input_ctx);
+    qDebug()<<"avcodec_free_context done";    avformat_close_input(&input_ctx);
     qDebug()<<"avformat_close_input_done";
     return 0;
 }
