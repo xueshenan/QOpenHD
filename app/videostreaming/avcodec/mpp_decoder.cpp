@@ -106,6 +106,7 @@ int MppDecoder::decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffe
         }
     }
 
+    //qDebug() << "remain length" << mpp_packet_get_length(mpp_packet);
     if (parse_time != std::nullopt) {
         const auto delay = beforeFeedFrame - parse_time.value();
         avg_parse_time.add(delay);
@@ -255,7 +256,7 @@ try_again:
             {
                 RK_S64 pts = mpp_frame_get_pts(frame);
                 int64_t decode_us = getTimeUs() - pts;
-                // qDebug()<<"(True) decode delay(wait):"<<((float)std::chrono::duration_cast<std::chrono::microseconds>(x_delay).count()/1000.0f)<<" ms";
+//                qDebug()<<"(True) decode delay(wait):"<< decode_us<<" us";
                 auto decode_ns = std::chrono::nanoseconds(decode_us * 1000);
                 avg_decode_time.add(decode_ns);
             }
@@ -265,7 +266,7 @@ try_again:
                 DecodingStatistcs::instance().set_decode_time(message.c_str());
             });
 
-            //const auto beforeConvertUs = getTimeUs();
+//            const auto beforeConvertUs = getTimeUs();
 
             RK_U32 width = mpp_frame_get_width(frame);
             RK_U32 height = mpp_frame_get_height(frame);
@@ -334,7 +335,7 @@ try_again:
             }
 
 
-            //qDebug() << "end convert: " << getTimeUs() - beforeConvertUs << " ns";
+//            qDebug() << "end convert: " << getTimeUs() - beforeConvertUs << " ns";
             // display frame
             on_new_frame(ref_frame);
 
@@ -490,6 +491,18 @@ bool MppDecoder::init_mpp_decoder() {
         goto MPP_TEST_OUT;
     }
 
+    ret = mpi->control(ctx, MPP_DEC_SET_PARSER_FAST_MODE, &fast_out);
+
+    ret = mpi->control(ctx, MPP_DEC_SET_IMMEDIATE_OUT, &fast_out);
+    if (ret) {
+        qDebug() << ctx << " failed to set immediate out " << ret;
+    }
+
+    ret = mpi->control(ctx, MPP_DEC_SET_ENABLE_FAST_PLAY, &fast_play);
+    if (ret) {
+        qDebug() << ctx << " failed to set immediate out " << ret;
+    }
+
     ret = mpp_init(ctx, MPP_CTX_DEC, MPP_VIDEO_CodingAVC);
     if (ret) {
         qDebug() << ctx << " mpp_init failed";
@@ -517,17 +530,17 @@ bool MppDecoder::init_mpp_decoder() {
     }
 
 
-    ret = mpp_dec_cfg_set_u32(cfg, "base:fast_out", fast_out);
-    if (ret) {
-        qDebug() << ctx << "failed to set fast_out ret " << ret;
-        goto MPP_TEST_OUT;
-    }
+//    ret = mpp_dec_cfg_set_u32(cfg, "base:fast_out", fast_out);
+//    if (ret) {
+//        qDebug() << ctx << "failed to set fast_out ret " << ret;
+//        goto MPP_TEST_OUT;
+//    }
 
-    ret = mpp_dec_cfg_set_u32(cfg, "base:enable_fast_play", fast_play);
-    if (ret) {
-        qDebug() << ctx << "failed to set enable fast play ret " << ret;
-        goto MPP_TEST_OUT;
-    }
+//    ret = mpp_dec_cfg_set_u32(cfg, "base:enable_fast_play", fast_play);
+//    if (ret) {
+//        qDebug() << ctx << "failed to set enable fast play ret " << ret;
+//        goto MPP_TEST_OUT;
+//    }
 
     ret = mpi->control(ctx, MPP_DEC_SET_CFG, cfg);
     if (ret) {

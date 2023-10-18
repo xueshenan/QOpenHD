@@ -10,4 +10,4 @@ export QT_QPA_EGLFS_SWAPINTERVAL=0
 export QT_QPA_EGLFS_DEBUG=1
 export QT_QPA_EGLFS_KMS_CONFIG=/usr/local/share/qopenhd/rock_qt_eglfs_kms_config.json
 
-./QOpenHD -platform eglfs
+sudo ./QOpenHD -platform eglfs

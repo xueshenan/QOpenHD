@@ -105,7 +105,7 @@ BaseWidget {
                 width: parent.width
                 height: 32
                 Text {
-                    text: qsTr("D:R:")
+                    text: qsTr("Drop:Render:")
                     color: "white"
                     font.bold: true
                     height: parent.height
