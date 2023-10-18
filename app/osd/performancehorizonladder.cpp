@@ -180,7 +180,7 @@ QSGNode *PerformanceHorizonLadder::updatePaintNode(QSGNode *n, QQuickItem::Updat
             ladders_geom_node->setFlag(QSGNode::OwnsGeometry);
             ladders_geom_node->setMaterial(flat_color_material );
             // TODO(anxs): cause app crash just remove for now
-            //m_ladders_geom_node->setFlag(QSGNode::OwnsMaterial);
+            ladders_geom_node->setFlag(QSGNode::OwnsMaterial);
         }
         {
             //auto vertices=std::vector<Vec2>();

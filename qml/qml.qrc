@@ -212,7 +212,6 @@
         <file>ui/elements/WorkaroundMessageBox.qml</file>
         <file>ui/elements/RestartQOpenHDMessageBox.qml</file>
         <file>ui/elements/SettingBaseElement.qml</file>
-        <file>ui/widgets/PerformanceHorizonWidget.qml</file>
         <file>ui/widgets/WBLinkRateControlWidget.qml</file>
         <file>ui/widgets/BaseWidgetDefaultUiControlElements.qml</file>
         <file>ui/elements/ConfirmSliderEnableDisable.qml</file>
