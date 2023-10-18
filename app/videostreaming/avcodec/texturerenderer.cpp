@@ -76,7 +76,7 @@ void TextureRenderer::paint(QQuickWindow *window, int rotation_degree)
         DecodingStatistcs::instance().set_n_rendered_frames(_display_stats.n_frames_rendered);
 
         const auto now_us = getTimeUs();
-        const auto delay_us = now_us-frame_pts;
+        const auto delay_us = now_us - frame_pts;
         _display_stats.decode_and_render.add(std::chrono::microseconds(delay_us));
         if (_display_stats.decode_and_render.time_since_last_log() > std::chrono::seconds(3)) {
             DecodingStatistcs::instance().set_decode_and_render_time(_display_stats.decode_and_render.getAvgReadable().c_str());
