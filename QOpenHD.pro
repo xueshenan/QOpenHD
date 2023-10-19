@@ -71,7 +71,6 @@ LinuxBuild {
 # see app/adsb/adsb_lib.pri for an example
 QT +=core quick qml gui \
     widgets
-# QT += opengl
 
 INCLUDEPATH += $$PWD/lib
 INCLUDEPATH += $$PWD/app

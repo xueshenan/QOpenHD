@@ -42,6 +42,7 @@ static std::string video_codec_to_string(const VideoCodec& codec) {
         return "h265";
         break;
     }
+    return "h264";
 }
 
 /**

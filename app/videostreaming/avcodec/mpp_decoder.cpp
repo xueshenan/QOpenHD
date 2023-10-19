@@ -81,9 +81,8 @@ void MppDecoder::constant_decode()
 
 int MppDecoder::decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffer, std::optional<std::chrono::steady_clock::time_point> parse_time)
 {
-    const auto beforeFeedFrame = std::chrono::steady_clock::now();
     if (parse_time != std::nullopt) {
-        const auto delay = beforeFeedFrame - parse_time.value();
+        const auto delay = std::chrono::steady_clock::now() - parse_time.value();
         avg_parse_time.add(delay);
         avg_parse_time.custom_print_in_intervals(std::chrono::seconds(3),[](const std::string /*name*/, const std::string message) {
             DecodingStatistcs::instance().set_parse_and_enqueue_time(message.c_str());
@@ -330,15 +329,6 @@ try_again:
                     uv_pos += out_frame->linesize[1];
                 }
             }
-            static int save_to_file = 1;
-            if (save_to_file) {
-                FILE *fp = fopen("/home/orangepi/work/out.yuv", "wb");
-                fwrite(out_frame->data[0], 1, width * height, fp);
-                fwrite(out_frame->data[1], 1, width * height / 2, fp);
-                fclose(fp);
-                save_to_file = 0;
-            }
-
 //            qDebug() << "end convert: " << getTimeUs() - beforeConvertUs << " ns";
             // display frame
             on_new_frame(ref_frame);
