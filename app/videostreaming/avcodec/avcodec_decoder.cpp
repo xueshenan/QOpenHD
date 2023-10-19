@@ -211,14 +211,6 @@ int AVCodecDecoder::decode_and_wait_for_frame(AVPacket *packet,std::optional<std
             if(true){
                 break;
             }
-            if(n_no_output_frame_after_x_seconds>=2){
-                // note decode latency is now wrong
-                //qDebug()<<"Skipping decode lockstep due to no frame for more than X seconds\n";
-                DecodingStatistcs::instance().set_doing_wait_for_frame_decode("No");
-                if(n_times_we_tried_getting_a_frame_this_time>4){
-                    break;
-                }
-            }
             //std::cout<<"avcodec_receive_frame returned:"<<ret<<"\n";
             // for some video files, the decoder does not output a frame every time a h264 frame has been fed
             // In this case, I unblock after X seconds, but we cannot measure the decode delay by using the before-after

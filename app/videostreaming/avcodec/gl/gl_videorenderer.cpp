@@ -124,9 +124,13 @@ void GL_VideoRenderer::update_texture_nv12(AVFrame* frame) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glBindTexture(GL_TEXTURE_2D, nv12_frametexture.textures[i]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);\
         glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, widths[i], heights[i], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->data[i]);
+        if (i == 1) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, widths[i], heights[i], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->data[i]);
+        } else {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, widths[i], heights[i], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->data[i]);
+        }
     }
     glPixelStorei(GL_UNPACK_ROW_LENGTH, gl_unpack_row_length_before);
     glPixelStorei(GL_UNPACK_ALIGNMENT, gl_unpack_alignment_before);
@@ -250,7 +254,7 @@ void GL_VideoRenderer::update_texture_gl(AVFrame *frame) {
     }
 }
 
-void GL_VideoRenderer::draw_texture_gl(const bool dev_draw_alternating_rgb_dummy_frames,int rotation_degree) {
+void GL_VideoRenderer::draw_texture_gl(const bool dev_draw_alternating_rgb_dummy_frames, int rotation_degree) {
     //GL_shaders::debug_set_swap_interval(0);
     if (egl_frame_texture.has_valid_image) {
         gl_shaders->draw_egl(egl_frame_texture.texture,rotation_degree);
@@ -262,11 +266,11 @@ void GL_VideoRenderer::draw_texture_gl(const bool dev_draw_alternating_rgb_dummy
                                 yuv_420_p_sw_frame_texture.textures[2],
                                 rotation_degree);
     }
-    else{
+    else {
         // no valid video texture yet, alternating draw the rgb textures.
         if (dev_draw_alternating_rgb_dummy_frames) {
             const auto rgb_texture = frameCount % 2==0? texture_rgb_blue:texture_rgb_green;
-            gl_shaders->draw_rgb(rgb_texture,rotation_degree);
+            gl_shaders->draw_rgb(rgb_texture, rotation_degree);
             frameCount++;
         }
     }

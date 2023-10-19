@@ -19,7 +19,6 @@ void DecodingStatistcs::reset_all_to_default()
     set_decode_and_render_time("?");
     set_n_renderer_dropped_frames(-1);
     set_udp_rx_bitrate(-1);
-    set_doing_wait_for_frame_decode("?");
     set_primary_stream_frame_format("?");
     set_decoding_type("?");
     set_n_missing_rtp_video_packets(-1);

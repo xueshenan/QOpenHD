@@ -29,8 +29,8 @@ BaseWidget {
     hasWidgetAction: true
 
     // We display quite a lot of text, and this one is only for development anyways
-    widgetActionWidth: 500
-    widgetActionHeight: 600
+    widgetActionWidth: 440
+    widgetActionHeight: 500
 
     //----------------------------- DETAIL BELOW ----------------------------------
 
@@ -181,28 +181,6 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.decode_and_render_time
-                    color: "white";
-                    font.bold: true;
-                    height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
-                    anchors.right: parent.right
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Item {
-                width: parent.width
-                height: 32
-                Text {
-                    text: qsTr("Doing wait_for_frame_decode:")
-                    color: "white"
-                    font.bold: true
-                    height: parent.height
-                    font.pixelSize: detailPanelFontPixels
-                    anchors.left: parent.left
-                    verticalAlignment: Text.AlignVCenter
-                }
-                Text {
-                    text: _decodingStatistics.doing_wait_for_frame_decode
                     color: "white";
                     font.bold: true;
                     height: parent.height

@@ -66,10 +66,8 @@ void MppDecoder::timer_check_settings_changed_callback()
 void MppDecoder::constant_decode()
 {
     while (!_should_terminate) {
-        qDebug()<<"Start decode";
+        qDebug()<<"Start mpp decoder";
         const auto settings = QOpenHDVideoHelper::read_config_from_settings();
-        // this is always for primary video, unless switching is enabled
-        auto stream_config = settings.primary_stream_config;
 
         // Does h264 and h265 custom rtp parse, and uses mpp for decode
         open_and_decode_until_error(settings);

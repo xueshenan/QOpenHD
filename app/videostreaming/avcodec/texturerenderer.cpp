@@ -115,7 +115,8 @@ int TextureRenderer::queue_new_frame_for_display(AVFrame *src_frame)
       qDebug()<<"Frame corrupt, but forwarding anyways";
       //return 0;
     }
-    _latest_frame_mutex.lock();
+
+    std::lock_guard<std::mutex> lock(_latest_frame_mutex);
     // We drop a frame that has (not yet) been consumed by the render thread to whatever is the newest available.
     if (_latest_frame != nullptr) {
       av_frame_free(&_latest_frame);
@@ -130,11 +131,9 @@ int TextureRenderer::queue_new_frame_for_display(AVFrame *src_frame)
       fprintf(stderr, "av_frame_ref error\n");
       av_frame_free(&frame);
       // don't forget to give up the lock
-      _latest_frame_mutex.unlock();
       return AVERROR(EINVAL);
     }
     _latest_frame = frame;
-    _latest_frame_mutex.unlock();
     return 0;
 }
 

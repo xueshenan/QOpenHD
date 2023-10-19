@@ -24,7 +24,6 @@ class DecodingStatistcs : public QObject
     L_RO_PROP(int, n_renderer_dropped_frames, set_n_renderer_dropped_frames, -1)
     L_RO_PROP(int, n_rendered_frames, set_n_rendered_frames, -1)
     L_RO_PROP(int, udp_rx_bitrate, set_udp_rx_bitrate, -1)
-    L_RO_PROP(QString, doing_wait_for_frame_decode, set_doing_wait_for_frame_decode, "?")
     L_RO_PROP(QString, primary_stream_frame_format, set_primary_stream_frame_format, "?")
     // SW or HW decode
     L_RO_PROP(QString, decoding_type, set_decoding_type, "?")

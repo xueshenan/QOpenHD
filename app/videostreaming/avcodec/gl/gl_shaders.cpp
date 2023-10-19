@@ -91,8 +91,8 @@ static const GLchar* fragment_shader_source_YUV420P =
 	"	const vec3 Gcoeff = vec3(1.1644, -0.3918, -0.813);\n"
 	"	const vec3 Bcoeff = vec3(1.1644,  2.0172,  0.000);\n"
 	"	float Y = texture2D(s_texture_y, v_texCoord).r;\n"
-	"	float U = texture2D(s_texture_u, v_texCoord).r;\n"
-	"	float V = texture2D(s_texture_v, v_texCoord).r;\n"
+    "	float U = texture2D(s_texture_u, v_texCoord).r;\n"
+    "	float V = texture2D(s_texture_v, v_texCoord).r;\n"
 	"	vec3 yuv=vec3(Y,U,V);\n"
 	"	vec3 rgb;\n"
 	"	// Do the color transform \n"
@@ -160,9 +160,9 @@ static const GLfloat vertices[4][3] =
 // Consti10: Video was flipped horizontally (at least big buck bunny), fixed
 static const GLfloat uv_coords[][4][2] =
 	{
-		//{ {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} }
-		//{ {1.0, 1.0}, {0.0, 1.0}, {1.0, 0.0}}//, {0.0, 0.0} }
-		{ {0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0} }
+        //{ {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} }
+        //{ {1.0, 1.0}, {0.0, 1.0}, {1.0, 0.0}}//, {0.0, 0.0} }
+        { {0.0, 1.0}, {1.0, 1.0}, {0.0, 0.0}, {1.0, 0.0} }
 	};
 static const GLfloat uv_coords_rotated_90_degree[][4][2] =
     {
