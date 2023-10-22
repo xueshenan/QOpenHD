@@ -41,12 +41,11 @@ public slots:
     void m_QQuickWindow_afterRenderPassRecording();
 private:
     // for the main render thread (render pass recording)
-    std::chrono::steady_clock::time_point last_frame=std::chrono::steady_clock::now();
-    AvgCalculator avgMainRenderFrameDelta{};
+    std::chrono::steady_clock::time_point _last_frame = std::chrono::steady_clock::now();
+    AvgCalculator _avg_render_frame_delta{};
     // NOTE: For some reason there seems to be no difference between frame time and before / after rendering -
     // looks like there is a glFLush() or somethin in QT.
-    //Chronometer m_avg_rendering_time{};
-    Chronometer m_avg_renderpass_time{};
+    Chronometer _avg_renderpass_time{};
 
 };
 
