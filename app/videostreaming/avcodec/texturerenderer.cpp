@@ -50,23 +50,24 @@ void TextureRenderer::paint(QQuickWindow *window, int rotation_degree)
 //    qDebug()<<" TextureRenderer::paint() frame time:"<<frame_time_ms<<"ms";
     _render_count++;
 
-   // Play nice with the RHI. Not strictly needed when the scenegraph uses
-   // OpenGL directly.
-   // Consti10: comp error, seems to work without, too
-   if (window != nullptr) {
-       window->beginExternalCommands();
-   }
-   if (_clear_all_video_textures_next_frame) {
-       remove_queued_frame_if_avalable();
-       _gl_video_renderer->clean_video_textures_gl();
-       DecodingStatistcs::instance().set_n_renderer_dropped_frames(0);
-       DecodingStatistcs::instance().set_n_rendered_frames(-1);
-       DecodingStatistcs::instance().set_decode_and_render_time("-1");
-       _clear_all_video_textures_next_frame = false;
-   }
+    if (_clear_all_video_textures_next_frame) {
+        remove_queued_frame_if_avalable();
+        _gl_video_renderer->clean_video_textures_gl();
+        DecodingStatistcs::instance().set_n_renderer_dropped_frames(0);
+        DecodingStatistcs::instance().set_n_rendered_frames(-1);
+        DecodingStatistcs::instance().set_decode_and_render_time("-1");
+        _clear_all_video_textures_next_frame = false;
+    }
 
-   AVFrame* new_frame = fetch_latest_decoded_frame();
-   if (new_frame != nullptr) {
+    // Play nice with the RHI. Not strictly needed when the scenegraph uses
+    // OpenGL directly.
+    // Consti10: comp error, seems to work without, too
+    if (window != nullptr) {
+        window->beginExternalCommands();
+    }
+
+    AVFrame* new_frame = fetch_latest_decoded_frame();
+    if (new_frame != nullptr) {
         // Note : the update might free the frame, so we gotta store the timestamp before !
         const auto frame_pts = new_frame->pts;
         // update the texture with this frame
@@ -83,27 +84,29 @@ void TextureRenderer::paint(QQuickWindow *window, int rotation_degree)
             _display_stats.decode_and_render.set_last_log();
             _display_stats.decode_and_render.reset();
         }
-   }
-   auto video_tex_width = _gl_video_renderer->get_current_video_width();
-   auto video_tex_height = _gl_video_renderer->get_current_video_height();
-   if (rotation_degree == 90 || rotation_degree == 270) {
+    }
+
+    auto video_tex_width = _gl_video_renderer->get_current_video_width();
+    auto video_tex_height = _gl_video_renderer->get_current_video_height();
+    if (rotation_degree == 90 || rotation_degree == 270) {
         // just swap them around when rotated to get the right viewport
-        std::swap(video_tex_width,video_tex_height);
-   }
-   if (video_tex_width > 0 && video_tex_height > 0) {
+        std::swap(video_tex_width, video_tex_height);
+    }
+    if (video_tex_width > 0 && video_tex_height > 0) {
        const auto viewport = helper::ratio::calculate_viewport(_viewport_size.width(), _viewport_size.height(),video_tex_width,video_tex_height,QOpenHDVideoHelper::get_primary_video_scale_to_fit());
        glViewport(viewport.x,viewport.y,viewport.width,viewport.height);
-   }
-   glDisable(GL_DEPTH_TEST);
+    }
+    glDisable(GL_DEPTH_TEST);
 
-   _gl_video_renderer->draw_texture_gl(_dev_draw_alternating_rgb_dummy_frames, rotation_degree);
-   // make sure we leave how we started / such that Qt rendering works normally
-   glEnable(GL_DEPTH_TEST);
-   glViewport(0, 0, _viewport_size.width(), _viewport_size.height());
+    _gl_video_renderer->draw_texture_gl(_dev_draw_alternating_rgb_dummy_frames, rotation_degree);
 
-   if (window != nullptr) {
-       window->endExternalCommands();
-   }
+    // make sure we leave how we started / such that Qt rendering works normally
+    glEnable(GL_DEPTH_TEST);
+    glViewport(0, 0, _viewport_size.width(), _viewport_size.height());
+
+    if (window != nullptr) {
+        window->endExternalCommands();
+    }
 }
 
 int TextureRenderer::queue_new_frame_for_display(AVFrame *src_frame)

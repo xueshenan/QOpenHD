@@ -100,7 +100,10 @@ int MppDecoder::decode_and_wait_for_frame(std::shared_ptr<NALUBuffer> nalu_buffe
     mpp_packet_set_size(mpp_packet, size);
     mpp_packet_set_pos(mpp_packet, data);
     mpp_packet_set_length(mpp_packet, size);
+    mpp_packet_set_pts(mpp_packet, beforeFeedFrameUs);
+    mpp_packet_set_dts(mpp_packet, beforeFeedFrameUs);
 
+//    qDebug() << "put packet pts" << beforeFeedFrameUs;
     MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
     if (ret == MPP_OK) {
         if (!_dec_data.first_pkt) {
@@ -131,7 +134,9 @@ try_again:
             break;
         }
 
-        gotFrame = true;
+        if (frame != NULL) {
+            gotFrame = true;
+        }
 
         // we got a new frame
         if (frame != NULL) {
@@ -141,7 +146,6 @@ try_again:
                 RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
                 RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
                 RK_U32 buf_size = mpp_frame_get_buf_size(frame);
-
                 qDebug() <<"decode_get_frame get info changed found";
                 qDebug() << "decoder require buffer w:h [" << width << ":" << height << "]"
                          << "stride [" << hor_stride << ":" << ver_stride << "]"
@@ -246,10 +250,26 @@ try_again:
                     printf("%p info change ready failed ret %d\n", ctx, ret);
                     break;
                 }
+
+                // pause for get next frame
+                usleep(10000);
+                mpp_frame_deinit(&frame);
+                frame = NULL;
+                ret = mpi->decode_get_frame(ctx, &frame);
             }
 
+            if (frame == NULL) {
+                break;
+            }
+            RK_U32 width = mpp_frame_get_width(frame);
+            RK_U32 height = mpp_frame_get_height(frame);
+            RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
+            RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
+            RK_S64 pts = mpp_frame_get_pts(frame);
+//            qDebug() << "get new frame : " << pts;
+
             {
-                int64_t decode_us = getTimeUs() - beforeFeedFrameUs;
+                int64_t decode_us = getTimeUs() - pts;
 //                qDebug()<<"(True) decode delay(wait):"<< decode_us<<" us";
                 auto decode_ns = std::chrono::nanoseconds(decode_us * 1000);
                 avg_decode_time.add(decode_ns);
@@ -261,11 +281,6 @@ try_again:
             });
 
 //            const auto beforeConvertUs = getTimeUs();
-
-            RK_U32 width = mpp_frame_get_width(frame);
-            RK_U32 height = mpp_frame_get_height(frame);
-            RK_U32 hor_stride = mpp_frame_get_hor_stride(frame);
-            RK_U32 ver_stride = mpp_frame_get_ver_stride(frame);
 //            MppFrameFormat fmt = mpp_frame_get_fmt(frame);      //MPP_FMT_YUV420SP(NV12)
             MppBuffer buffer = mpp_frame_get_buffer(frame);
             if (buffer == NULL) {
@@ -419,7 +434,7 @@ void MppDecoder::open_and_decode_until_error(const QOpenHDVideoHelper::VideoStre
                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
                   continue;
               }
-              qDebug()<<"Got decode data (before keyframe)";
+              qDebug()<<"Decode config data";
               decode_config_data(keyframe_buf);
               has_config_data=true;
               continue;
@@ -447,6 +462,7 @@ bool MppDecoder::decode_config_data(std::shared_ptr<std::vector<uint8_t>> config
     mpp_packet_set_dts(mpp_packet, 0);
 
     MPP_RET ret = mpi->decode_put_packet(ctx, mpp_packet);
+
     return ret == MPP_OK;
 }
 

@@ -10,7 +10,7 @@
 #include <vector>
 #include "gl_shaders.h"
 
-static const char *GlErrorString(GLenum error ){
+static const char *GlErrorString(GLenum error) {
   switch ( error ){
 	case GL_NO_ERROR:						return "GL_NO_ERROR";
 	case GL_INVALID_ENUM:					return "GL_INVALID_ENUM";
@@ -18,7 +18,6 @@ static const char *GlErrorString(GLenum error ){
 	case GL_INVALID_OPERATION:				return "GL_INVALID_OPERATION";
 	case GL_INVALID_FRAMEBUFFER_OPERATION:	return "GL_INVALID_FRAMEBUFFER_OPERATION";
 	case GL_OUT_OF_MEMORY:					return "GL_OUT_OF_MEMORY";
-	  //
 	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
 	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
 	default: return "unknown";

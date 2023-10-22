@@ -167,7 +167,7 @@ void RTPReceiver::udp_raw_data_callback(const uint8_t *payload, const std::size_
     }
 }
 
-void RTPReceiver::nalu_data_callback(const std::chrono::steady_clock::time_point creation_time,const uint8_t *nalu_data, const int nalu_data_size)
+void RTPReceiver::nalu_data_callback(const std::chrono::steady_clock::time_point /*creation_time*/,const uint8_t *nalu_data, const int nalu_data_size)
 {
     //qDebug()<<"Got NALU "<<nalu_data_size;
     {

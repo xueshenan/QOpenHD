@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("OpenHD");
     QCoreApplication::setOrganizationDomain("openhd");
     QCoreApplication::setApplicationName("QOpenHD");
-    
+
     QSettings settings;
 
     const int screen_custom_font_dpi = settings.value("screen_custom_font_dpi").toInt();
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     } else {
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     }
-    //QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     // From https://stackoverflow.com/questions/63473541/how-to-dynamically-toggle-vsync-in-a-qt-application-at-runtime
     // Get rid of VSYNC if possible. Might / might not work. On my ubuntu nvidia & intel laptop, this at least seems to
@@ -227,9 +227,10 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
     {
-        QScreen* screen=app.primaryScreen();
-        if(screen){
+        QScreen* screen = app.primaryScreen();
+        if (screen != nullptr) {
             QRenderStats::instance().set_display_width_height(screen->size().width(),screen->size().height());
+            qDebug() << "screen refresh rate" << screen->refreshRate();
         }
     }
 
@@ -342,7 +343,7 @@ int main(int argc, char *argv[]) {
 #endif
 // Platform - dependend video end  -----------------------------------------------------------------
 
-    engine.rootContext()->setContextProperty("_decodingStatistics",&DecodingStatistcs::instance());
+    engine.rootContext()->setContextProperty("_decodingStatistics", &DecodingStatistcs::instance());
     // dirty
     engine.rootContext()->setContextProperty("_messageBoxInstance", &WorkaroundMessageBox::instance());
     engine.rootContext()->setContextProperty("_restartqopenhdmessagebox", &RestartQOpenHDMessageBox::instance());

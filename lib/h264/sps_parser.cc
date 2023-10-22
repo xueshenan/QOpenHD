@@ -19,6 +19,7 @@
 namespace {
 typedef opt::optional<webrtc::SpsParser::SpsState> OptionalSps;
 
+#undef RETURN_EMPTY_ON_FAIL
 #define RETURN_EMPTY_ON_FAIL(x) \
   if (!(x)) {                   \
     return OptionalSps();       \

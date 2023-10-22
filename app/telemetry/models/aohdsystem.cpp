@@ -28,9 +28,10 @@ static std::vector<int> get_dbm_40mhz(){
     return {-79,-76,-74,-71,-67,-63,-62,-61,-56,-54};
 }
 
-static int get_required_dbm_for_rate(int channel_width,int mcs_index){
-    const auto values=channel_width==20 ? get_dbm_20mhz() : get_dbm_40mhz();
-    if(mcs_index>=0 && mcs_index<=values.size()){
+static int get_required_dbm_for_rate(int channel_width, int mcs_index) {
+    const auto values = channel_width==20 ? get_dbm_20mhz() : get_dbm_40mhz();
+    int size = values.size();
+    if (mcs_index >= 0 && mcs_index < size) {
         return values[mcs_index];
     }
     return 0;
@@ -227,7 +228,7 @@ void AOHDSystem::process_x0(const mavlink_openhd_stats_monitor_mode_wifi_card_t 
         card.process_mavlink(msg);
         set_current_rx_rssi(card.curr_rx_rssi_dbm());
     }else{
-        if(msg.card_index<0 || msg.card_index>=4){
+        if (msg.card_index>=4) {
             qDebug()<<"Gnd invalid card index"<<msg.card_index;
             return;
         }
@@ -252,7 +253,7 @@ void AOHDSystem::process_x1(const mavlink_openhd_stats_monitor_mode_wifi_link_t 
             WiFiCard::instance_gnd(i).set_is_active_tx(false);
         }
         const auto active_tx_idx=msg.curr_tx_card_idx;
-        if(active_tx_idx>=0 && active_tx_idx<WiFiCard::N_CARDS){
+        if(active_tx_idx<WiFiCard::N_CARDS){
             WiFiCard::instance_gnd(active_tx_idx).set_is_active_tx(true);
         }
         set_tx_operating_mode(msg.tx_passive_mode_is_enabled);

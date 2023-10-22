@@ -36,6 +36,9 @@ namespace webrtc {
 
 #include <optional>
 namespace opt = std;
+
+#undef RETURN_EMPTY_ON_FAIL
+
 #define RETURN_EMPTY_ON_FAIL(x) \
   if (!(x)) {                   \
     return std::nullopt;       \

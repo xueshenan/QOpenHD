@@ -131,8 +131,10 @@ void AVCodecDecoder::constant_decode()
             use_external_decode_service = true;
         }
 
-        // Does h264 and h265 custom rtp parse, but uses avcodec for decode
-        open_and_decode_until_error_custom_rtp(settings);
+        if (!use_external_decode_service) {
+            // Does h264 and h265 custom rtp parse, but uses avcodec for decode
+            open_and_decode_until_error_custom_rtp(settings);
+        }
         qDebug()<<"Decode stopped,restarting";
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -718,7 +720,7 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
                   std::this_thread::sleep_for(std::chrono::milliseconds(100));
                   continue;
               }
-              qDebug()<<"Got decode data (before keyframe)";
+              qDebug()<<"Decode config data";
               pkt->data=keyframe_buf->data();
               pkt->size=keyframe_buf->size();
               decode_config_data(pkt);
@@ -730,7 +732,6 @@ void AVCodecDecoder::open_and_decode_until_error_custom_rtp(const QOpenHDVideoHe
                  // No buff after X seconds
                  continue;
              }
-             //qDebug()<<"Got decode data (after keyframe)";
              pkt->data=(uint8_t*)buf->get_nal().getData();
              pkt->size=buf->get_nal().getSize();
              decode_and_wait_for_frame(pkt,buf->get_nal().creationTime);

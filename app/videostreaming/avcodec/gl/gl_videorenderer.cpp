@@ -28,7 +28,6 @@ static EGLint texgen_attrs[] = {
 static void create_rgba_texture(GLuint& tex_id, int32_t color_rgba) {
     assert(tex_id==0);
     glGenTextures(1, &tex_id);
-    assert(tex_id>=0);
     glBindTexture(GL_TEXTURE_2D, tex_id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -124,7 +123,7 @@ void GL_VideoRenderer::update_texture_nv12(AVFrame* frame) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glBindTexture(GL_TEXTURE_2D, nv12_frametexture.textures[i]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);\
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]);
         if (i == 1) {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, widths[i], heights[i], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->data[i]);

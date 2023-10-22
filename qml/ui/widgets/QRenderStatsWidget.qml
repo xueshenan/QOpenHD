@@ -69,10 +69,10 @@ BaseWidget {
                 }
                 Text {
                     text: _qrenderstats.main_render_stats
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -92,10 +92,10 @@ BaseWidget {
                 }
                 Text {
                     text: _qrenderstats.qt_renderpass_time
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -115,10 +115,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.n_renderer_dropped_frames+":"+_decodingStatistics.n_rendered_frames
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -137,10 +137,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.parse_and_enqueue_time
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -162,7 +162,7 @@ BaseWidget {
                     color: "white";
                     font.bold: true;
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -181,10 +181,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.decode_and_render_time
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -203,10 +203,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.primary_stream_frame_format
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -225,10 +225,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.decoding_type
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -247,10 +247,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.n_missing_rtp_video_packets+""
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -291,10 +291,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.estimate_rtp_fps
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -313,10 +313,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.estimate_keyframe_interval
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -335,10 +335,10 @@ BaseWidget {
                 }
                 Text {
                     text: _decodingStatistics.n_decoder_dropped_frames
-                    color: "white";
-                    font.bold: true;
+                    color: "white"
+                    font.bold: true
                     height: parent.height
-                    font.pixelSize: detailPanelFontPixels;
+                    font.pixelSize: detailPanelFontPixels
                     anchors.right: parent.right
                     verticalAlignment: Text.AlignVCenter
                 }
