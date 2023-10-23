@@ -98,7 +98,7 @@ void GL_VideoRenderer::update_texture_nv12(AVFrame* frame) {
     assert(is_AV_PIX_FMT_NV12(frame->format));
     const GLuint frame_width = frame->width;
     const GLuint frame_height = frame->height;
-    const GLuint uv_width = frame_width;
+    const GLuint uv_width = frame_width/2;
     const GLuint uv_height = frame_height/2;
     GLuint widths[2] = {
         frame_width,
@@ -122,12 +122,15 @@ void GL_VideoRenderer::update_texture_nv12(AVFrame* frame) {
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glBindTexture(GL_TEXTURE_2D, nv12_frametexture.textures[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]);
         if (i == 1) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, widths[i], heights[i], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->data[i]);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]/2);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, widths[i], heights[i], 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, frame->data[i]);
         } else {
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, frame->linesize[i]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, widths[i], heights[i], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, frame->data[i]);
         }
     }

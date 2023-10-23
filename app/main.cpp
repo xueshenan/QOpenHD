@@ -193,14 +193,13 @@ int main(int argc, char *argv[]) {
     } else {
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     }
-    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
 
     // From https://stackoverflow.com/questions/63473541/how-to-dynamically-toggle-vsync-in-a-qt-application-at-runtime
     // Get rid of VSYNC if possible. Might / might not work. On my ubuntu nvidia & intel laptop, this at least seems to
     // result in tripple buffering with unlimited fps, a bit "better" regarding latency than default.
-    if(settings.value("dev_set_swap_interval_zero",false).toBool()){
-        qDebug()<<"Request swap interval of 0";
-        QSurfaceFormat format=QSurfaceFormat::defaultFormat();
+    if (settings.value("dev_set_swap_interval_zero",false).toBool()) {
+        qDebug() << "Request swap interval of 0";
+        QSurfaceFormat format = QSurfaceFormat::defaultFormat();
         format.setSwapInterval(0);
         QSurfaceFormat::setDefaultFormat(format);
     }
@@ -211,11 +210,11 @@ int main(int argc, char *argv[]) {
     qputenv("QT_SCALE_FACTOR", scaleAsQByteArray);
     qDebug()<<"Storing settings at ["<<settings.fileName()<<"]";
 
+    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
     // https://doc.qt.io/qt-6/qtquick-visualcanvas-scenegraph-renderer.html
     //qputenv("QSG_VISUALIZE", "overdraw");
     //qputenv("QSG_VISUALIZE", "batches");
     //qputenv("QSG_VISUALIZE", "changes");
-    //QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
     //QLoggingCategory::setFilterRules("qt.scenegraph.*=true");
     //QLoggingCategory::setFilterRules("qt.scenegraph.time.*=true");
     //QLoggingCategory::setFilterRules("qt.scenegraph.general=true");
@@ -306,20 +305,6 @@ int main(int argc, char *argv[]) {
 #endif //QOPENHD_HAS_MAVSDK_MAVLINK_TELEMETRY
 
 // Platform - dependend video begin -----------------------------------------------------------------
-#ifdef QOPENHD_ENABLE_GSTREAMER_QMLGLSINK
-    init_gstreamer(argc,argv);
-    // NEEDED !! For QMLqlsink to work !!
-    init_qmlglsink_and_log();
-#endif //QOPENHD_ENABLE_GSTREAMER_QMLGLSINK
-
-#ifdef QOPENHD_ENABLE_GSTREAMER_QMLGLSINK
-    engine.rootContext()->setContextProperty("QOPENHD_ENABLE_GSTREAMER_QMLGLSINK", QVariant(true));
-#ifdef QOPENHD_GSTREAMER_PRIMARY_VIDEO
-    engine.rootContext()->setContextProperty("_primary_video_gstreamer_qml", &GstQmlGlSinkStream::instancePrimary());
-#endif
-    engine.rootContext()->setContextProperty("QOPENHD_ENABLE_GSTREAMER_QMLGLSINK", QVariant(false));
-#endif
-
 #ifdef QOPENHD_ENABLE_VIDEO_VIA_AVCODEC
     // QT doesn't have the define(s) from c++
     engine.rootContext()->setContextProperty("QOPENHD_ENABLE_VIDEO_VIA_AVCODEC", QVariant(true));
@@ -327,11 +312,7 @@ int main(int argc, char *argv[]) {
 #else
     engine.rootContext()->setContextProperty("QOPENHD_ENABLE_VIDEO_VIA_AVCODEC", QVariant(false));
 #endif
-#ifdef HAVE_MMAL
-    engine.rootContext()->setContextProperty("QOPENHD_HAVE_MMAL", QVariant(true));
-#else
-    engine.rootContext()->setContextProperty("QOPENHD_HAVE_MMAL", QVariant(false));
-#endif
+
 #ifdef QOPENHD_ENABLE_VIDEO_VIA_ANDROID
     engine.rootContext()->setContextProperty("QOPENHD_ENABLE_VIDEO_VIA_ANDROID", QVariant(true));
     qmlRegisterType<QSurfaceTexture>("OpenHD", 1, 0, "SurfaceTexture");
@@ -341,6 +322,7 @@ int main(int argc, char *argv[]) {
 #else
      engine.rootContext()->setContextProperty("QOPENHD_ENABLE_VIDEO_VIA_ANDROID", QVariant(false));
 #endif
+
 // Platform - dependend video end  -----------------------------------------------------------------
 
     engine.rootContext()->setContextProperty("_decodingStatistics", &DecodingStatistcs::instance());
@@ -389,8 +371,8 @@ int main(int argc, char *argv[]) {
     QRenderStats::instance().register_to_root_window(engine);
 
     LogMessagesModel::instanceOHD().addLogMessage("QOpenHD", "running");
-    const int retval = app.exec();
 
+    const int retval = app.exec();
     return retval;
 
 

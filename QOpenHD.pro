@@ -244,7 +244,7 @@ AndroidBuild {
     #CONFIG += EnableSpeech
     QT += androidextras
 
-    include(app/videostreaming/gstreamer/gst_video.pri)
+#    include(app/videostreaming/gstreamer/gst_video.pri)
     # needed to build android from windows, but not from linux
     QMAKE_PROJECT_DEPTH = 0
 }
