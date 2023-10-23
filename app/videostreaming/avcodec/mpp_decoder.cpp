@@ -251,8 +251,6 @@ try_again:
                     break;
                 }
 
-                // pause for get next frame
-                usleep(10000);
                 mpp_frame_deinit(&frame);
                 frame = NULL;
                 ret = mpi->decode_get_frame(ctx, &frame);
@@ -486,6 +484,7 @@ bool MppDecoder::init_mpp_decoder() {
     MppDecCfg cfg       = NULL;
 
     RK_U32 immediate_out = 1;
+    RK_S64 output_timeout = -1;
 
     ret = mpp_packet_init(&packet, NULL, 0);
     if (ret) {
@@ -523,16 +522,25 @@ bool MppDecoder::init_mpp_decoder() {
     ret = mpp_dec_cfg_set_u32(cfg, "base:fast_parse", 1);
     if (ret) {
         qDebug() << ctx << "failed to set fast parse " << ret;
+        goto MPP_TEST_OUT;
     }
 
     ret = mpp_dec_cfg_set_u32(cfg, "base:enable_fast_play", 1);
     if (ret) {
         qDebug() << ctx << "failed to enable fast play " << ret;
+        goto MPP_TEST_OUT;
     }
 
     ret = mpi->control(ctx, MPP_DEC_SET_IMMEDIATE_OUT, &immediate_out);
     if (ret) {
         qDebug() << ctx << " failed to set immediate out " << ret;
+        goto MPP_TEST_OUT;
+    }
+
+    ret = mpi->control(ctx, MPP_SET_OUTPUT_TIMEOUT, &output_timeout);
+    if (ret) {
+        qDebug() << ctx << " failed to set output timeout " << ret;
+        goto MPP_TEST_OUT;
     }
 
     ret = mpi->control(ctx, MPP_DEC_SET_CFG, cfg);
@@ -540,7 +548,6 @@ bool MppDecoder::init_mpp_decoder() {
         qDebug() << ctx << "failed to set cfg " << cfg << " ret " << ret;
         goto MPP_TEST_OUT;
     }
-
     _dec_data.ctx            = ctx;
     _dec_data.mpi            = mpi;
     _dec_data.packet         = packet;
