@@ -49,29 +49,35 @@ void LogMessagesModel::add_message_warn(QString tag, QString message)
 
 int LogMessagesModel::rowCount( const QModelIndex& parent) const
 {
-    if (parent.isValid())
+    if (parent.isValid()) {
         return 0;
+    }
 
     return m_data.count();
 }
 
 QVariant LogMessagesModel::data(const QModelIndex &index, int role) const
 {
-    if ( !index.isValid() )
+    if (!index.isValid()) {
         return QVariant();
+    }
 
     const LogMessageData &data = m_data.at(index.row());
-    if ( role == TagRole ){
+    if (role == TagRole) {
         return data.tag;
     }
-    else if ( role == MessageRole )
+    else if (role == MessageRole) {
         return data.message;
-    else if ( role == TimestampRole )
+    }
+    else if (role == TimestampRole) {
         return data.timestamp;
-    else if ( role == SeverityColorRole)
+    }
+    else if (role == SeverityColorRole) {
         return data.severity_color;
-    else
+    }
+    else {
         return QVariant();
+    }
 }
 
 QHash<int, QByteArray> LogMessagesModel::roleNames() const
@@ -80,7 +86,7 @@ QHash<int, QByteArray> LogMessagesModel::roleNames() const
         {TagRole, "tag"},
         {MessageRole, "message"},
         {TimestampRole, "timestamp"},
-        {SeverityColorRole,"severity_color"}
+        {SeverityColorRole, "severity_color"}
     };
     return mapping;
 }
@@ -109,18 +115,18 @@ void LogMessagesModel::removeData(int row)
 void LogMessagesModel::addData(LogMessageData logMessageData)
 {
     // A few important log(s) we show in the HUD
-    if(logMessageData.message.contains("Scanning ")){
+    if (logMessageData.message.contains("Scanning ")) {
         HUDLogMessagesModel::instance().add_message_info(logMessageData.message);
-    }else if(logMessageData.message.contains("Cannot scan ")){
+    } else if (logMessageData.message.contains("Cannot scan ")) {
         HUDLogMessagesModel::instance().add_message_warning(logMessageData.message);
-    }else if(logMessageData.message.contains("TX (likely) not supported by card(s)")){
+    } else if (logMessageData.message.contains("TX (likely) not supported by card(s)")){
         //HUDLogMessagesModel::instance().add_message_warning(logMessageData.message);
-    }else if(logMessageData.message.contains("Bind phrase mismatch")){
+    } else if (logMessageData.message.contains("Bind phrase mismatch")) {
         HUDLogMessagesModel::instance().add_message_warning(logMessageData.message);
     }
     //qDebug()<<"LogMessagesModel::addData"<<logMessageData.message;
     // We limit logging to X log messages here
-    if(m_data.size()>=MAX_N_STORED_LOG_MESSAGES){
+    if (m_data.size() >= MAX_N_STORED_LOG_MESSAGES) {
         // remove oldest one
         removeData(0);
     }

@@ -82,7 +82,7 @@ Rectangle {
                         color: closeButton.hovered ? "grey" : "white" // I update background color by this
                     }
                     onClicked: {
-                        settings_form.visible=false
+                        settings_form.visible = false
                     }
                 }
             }

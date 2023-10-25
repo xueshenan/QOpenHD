@@ -1,5 +1,5 @@
-#include "qqmlcontext.h"
-#include "qscreen.h"
+#include <QQmlContext>
+#include <QScreen>
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlComponent>

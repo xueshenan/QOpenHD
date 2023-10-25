@@ -15,8 +15,8 @@ Item {
     Layout.fillHeight: true
     Layout.fillWidth: true
 
-    property int rowHeight: 64
-    property int elementHeight: 48
+    property int rowHeight: 80
+    property int elementHeight: 30
     property int elementComboBoxWidth: 300
 
     // Tab bar for selecting items in stack layout
@@ -29,9 +29,6 @@ Item {
         TabButton {
             text: qsTr("LOG FC")
         }
-        //TabButton {
-        //    text: qsTr("LOG OpenHD Ground")
-        //}
     }
 
     // placed right below the top bar
@@ -52,8 +49,8 @@ Item {
                 model: _ohdlogMessagesModel
                 delegate:
                     Rectangle {
-                    color: Qt.rgba(0.3,0.3,0.3)
-                    height: childrenRect.height
+                    color: Qt.rgba(0.96, 0.96, 0.96)
+                    height: elementHeight
                     width: logMessagesModelParentListView.width //parent.width for some reason we cannot just use parent.width here
 
                     Text {
@@ -79,7 +76,7 @@ Item {
                 delegate:
                     Rectangle {
                     color: Qt.rgba(0.3,0.3,0.3)
-                    height: childrenRect.height
+                    height: elementHeight
                     width: logMessagesModelFCParentListView.width //parent.width for some reason we cannot just use parent.width here
 
                     Text {

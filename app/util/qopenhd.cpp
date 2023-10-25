@@ -1,9 +1,9 @@
 #include "qopenhd.h"
-#include "qpixmap.h"
+#include <QPixmap>
 #include <QCoreApplication>
 #include <QSettings>
 #include <QDebug>
-#include <qapplication.h>
+#include <QApplication>
 
 #include<iostream>
 #include<fstream>
@@ -16,14 +16,13 @@
 #if defined(ENABLE_SPEECH)
 #include <QTextToSpeech>
 #include <QVoice>
-#include <qsettings.h>
 #endif
 
 #if defined(__android__)
 #include <QAndroidJniEnvironment>
 #include <QtAndroid>
 #endif
-
+#include "logging/logmessagesmodel.h"
 
 QOpenHD &QOpenHD::instance()
 {
@@ -38,7 +37,7 @@ QOpenHD::QOpenHD(QObject *parent)
     m_speech = new QTextToSpeech(this);
     QStringList engines = QTextToSpeech::availableEngines();
     if (engines.empty()) {
-        qDebug() << "No available speech engine";
+        LogMessagesModel::instanceOHD().addLogMessage("Speech", "No available speech engine");
         return;
     }
     qDebug() << "Available speech engines:";

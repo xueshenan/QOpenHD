@@ -30,11 +30,11 @@ Item {
         anchors.topMargin: 0
         focus: true
         Keys.onPressed: (event)=> {
-                if (event.key == Qt.Key_Return) {
-                    console.log("enter was pressed");
-                    event.accepted = true;
-                    hudOverlayGrid.settingsButtonClicked();
-                                settingsButton.focus=false;
+                if (event.key === Qt.Key_Return) {
+                    console.log("enter was pressed")
+                    event.accepted = true
+                    hudOverlayGrid.settingsButtonClicked()
+                    settingsButton.focus=false
                 }
             }
         MouseArea {
