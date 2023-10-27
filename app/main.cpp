@@ -225,7 +225,11 @@ int main(int argc, char *argv[]) {
         QScreen* screen = app.primaryScreen();
         if (screen != nullptr) {
             QRenderStats::instance().set_display_width_height(screen->size().width(),screen->size().height());
+            qDebug() << "screen manufacturer " << screen->manufacturer();
             qDebug() << "screen refresh rate" << screen->refreshRate();
+            qDebug() << "screen width : " << screen->size().width() << " height : " << screen->size().height();
+            qDebug() << "screen orientation " << screen->orientation();
+
         }
     }
 
