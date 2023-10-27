@@ -40,11 +40,7 @@ const QVector<QString> permissions({"android.permission.INTERNET",
 #ifdef QOPENHD_ENABLE_VIDEO_VIA_AVCODEC
 #include "QSGVideoTextureItem.h"
 #endif
-#ifdef QOPENHD_ENABLE_GSTREAMER_QMLGLSINK
-#include "videostreaming/gstreamer/gst_helper.hpp"
-#include "videostreaming/gstreamer/gstqmlglsinkstream.h"
-#include "videostreaming/gstreamer/gstrtpaudioplayer.h"
-#endif //QOPENHD_ENABLE_GSTREAMER_QMLGLSINK
+
 #ifdef QOPENHD_ENABLE_VIDEO_VIA_ANDROID
 #include <videostreaming/android/qandroidmediaplayer.h>
 #include <videostreaming/android/qsurfacetexture.h>
