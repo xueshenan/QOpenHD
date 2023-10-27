@@ -3,7 +3,6 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Extras 1.4
 import QtQuick.Layouts 1.12
-import QtGraphicalEffects 1.12
 import QtQuick.Shapes 1.0
 
 import Qt.labs.settings 1.0
@@ -146,54 +145,6 @@ BaseWidget {
 
                 Behavior on value {NumberAnimation { duration: settings.smoothing }}
                 value: get_vertical_speed_m_s_or_ft_s()
-
-                style: CircularGaugeStyle {
-                    labelInset: outerRadius * -.3
-                    minorTickmarkCount: 0
-                    tickmarkStepSize: {
-                        settings.vertical_speed_gauge_widget_max / 5
-                    }
-                    // @disable-check M223
-                    labelStepSize: {
-                        settings.vertical_speed_gauge_widget_max / 5
-                    }
-                    maximumValueAngle: 135
-                    minimumValueAngle: -135
-
-                    tickmark: Rectangle {
-                        visible: styleData.value
-                        implicitWidth: outerRadius * 0.05
-                        antialiasing: true
-                        implicitHeight: outerRadius * 0.2
-                        color: settings.color_shape
-                        border.color: settings.color_glow
-                        border.width: 1
-                        width: 3
-                    }
-
-                    tickmarkLabel: Text {
-                        rotation: 90
-                        //font.pixelSize: Math.max(6, outerRadius * 0.1)
-                        font.pixelSize: 9
-                        font.family: settings.font_text
-                        text: styleData.value
-                        color: settings.color_text
-                        antialiasing: true
-                        style: Text.Outline
-                        styleColor: settings.color_glow
-                    }
-
-                    needle: Rectangle {
-                        y: outerRadius * -.01 //this is the needle base closest to axis
-                        implicitWidth: outerRadius * 0.05
-                        implicitHeight: outerRadius
-                        antialiasing: true
-                        color: settings.color_text
-                        border.color: settings.color_glow
-                        border.width: 1
-                        width: 3
-                    }
-                }
             }
         }
     }

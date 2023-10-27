@@ -78,7 +78,7 @@ INCLUDEPATH += $$PWD/app/exp
 
 # QOpenHD telemetry (mavlink, partially based on MAVSDK) features
 # REQUIRED - without it QOpenHD will compile, but be pretty much non functional
-include(app/telemetry/telemetry.pri)
+#include(app/telemetry/telemetry.pri)
 
 # This code is platform and library independent, and always compiled.
 include(app/videostreaming/vscommon/vscommon.pri)
@@ -91,15 +91,15 @@ LinuxBuild {
     # However, this can be usefully for figuring out compiler issue(s) on different platform(s)
     # NOTE: QT Creator is quite bad at figuring out changes here, you might need a "full" rebuild or manualy delete
     # the build dir/cache, then rebuild
-    include(app/videostreaming/avcodec/avcodec_video.pri)
+#    include(app/videostreaming/avcodec/avcodec_video.pri)
 
     # Gstreamer / qmlglsink decode and display, all sources
     # r.n only used for secondary video and for primary video only on platforms we cannot do primary video via QSG / avcodec
 #    include(app/videostreaming/gstreamer/gst_video.pri)
 
-    CONFIG += EnableSpeech
-    DEFINES += ENABLE_SPEECH
-    QT += texttospeech
+#    CONFIG += EnableSpeech
+#    DEFINES += ENABLE_SPEECH
+#    QT += texttospeech
     # adsb library
     # Only tested on linux so far, but might work on other platforms already / with minimal effort, too
     # include(app/adsb/adsb_lib.pri)
