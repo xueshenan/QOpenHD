@@ -171,10 +171,6 @@ Item {
         id: speedWidget
     }
 
-    SpeedSecondWidget {
-        id: speedSecondWidget
-    }
-
     // +3% cpu
     HeadingWidget {
         id: headingWidget

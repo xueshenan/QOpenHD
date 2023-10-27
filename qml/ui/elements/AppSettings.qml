@@ -237,11 +237,6 @@ Settings {
     property int speed_ladder_range: 100
     property int speed_ladder_minimum: 0
 
-    property bool show_speed_second: true
-    property bool speed_second_use_groundspeed: true
-    property bool speed_second_use_kmh: true
-    property bool speed_second_show_unit: true
-
     property bool altitude_ladder_show: true
     property bool altitude_ladder_show_ladder: true
     property bool altitude_ladder_use_msl: false
