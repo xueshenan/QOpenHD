@@ -74,7 +74,6 @@ QT +=core quick qml gui \
 
 INCLUDEPATH += $$PWD/lib
 INCLUDEPATH += $$PWD/app
-INCLUDEPATH += $$PWD/app/exp
 
 # QOpenHD telemetry (mavlink, partially based on MAVSDK) features
 # REQUIRED - without it QOpenHD will compile, but be pretty much non functional

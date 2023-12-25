@@ -4,17 +4,16 @@
 #include <iostream>
 #include <sstream>
 
-#include "avcodec_helper.hpp"
-#include "../common/TimeHelper.hpp"
+#include "common/TimeHelper.hpp"
 #include "common/util_fs.h"
+#include "common/SchedulingHelper.hpp"
+#include "util/WorkaroundMessageBox.h"
+#include "logging/hudlogmessagesmodel.h"
+#include "logging/logmessagesmodel.h"
 
+#include "avcodec_helper.hpp"
 #include "texturerenderer.h"
 #include "decodingstatistcs.h"
-#include "common/SchedulingHelper.hpp"
-#include "../util/WorkaroundMessageBox.h"
-#include "../logging/hudlogmessagesmodel.h"
-#include "../logging/logmessagesmodel.h"
-
 #include "ExternalDecodeService.hpp"
 
 static int hw_decoder_init(AVCodecContext *ctx, const enum AVHWDeviceType type){

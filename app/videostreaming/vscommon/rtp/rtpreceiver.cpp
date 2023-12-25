@@ -4,11 +4,11 @@
 
 #include "common/StringHelper.hpp"
 #include "common/openhd-util.hpp"
+#include "common/openhd-util.hpp"
+#include "app/logging/hudlogmessagesmodel.h"
 
 #include "QOpenHDVideoHelper.hpp"
 #include "decodingstatistcs.h"
-#include "common/openhd-util.hpp"
-#include "../../logging/hudlogmessagesmodel.h"
 
 RTPReceiver::RTPReceiver(const int port,const std::string ip,bool is_h265,bool feed_incomplete_frames):
     is_h265(is_h265)

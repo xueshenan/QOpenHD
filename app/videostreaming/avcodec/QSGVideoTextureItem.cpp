@@ -6,14 +6,14 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtCore/QRunnable>
 
-#include "../util/qrenderstats.h"
-#include "../logging/logmessagesmodel.h"
+#include "util/qrenderstats.h"
+#include "logging/logmessagesmodel.h"
 
 QSGVideoTextureItem::QSGVideoTextureItem():
     _renderer(nullptr)
 {
     connect(this, &QQuickItem::windowChanged, this, &QSGVideoTextureItem::handleWindowChanged);
-
+#ifdef ENABLE_MPP_DECODER
     const auto settings = QOpenHDVideoHelper::read_config_from_settings();
     // this is always for primary video, unless switching is enabled
     auto stream_config = settings.primary_stream_config;
@@ -29,6 +29,13 @@ QSGVideoTextureItem::QSGVideoTextureItem():
         _hw_decoder = std::make_unique<MppDecoder>(nullptr);
         _hw_decoder->init(true);
     }
+#else
+    // force use sw decoder
+    _use_sw_decoder = true;
+    LogMessagesModel::instanceOHD().addLogMessage("Video", "Use avcodec software decoder");
+    _sw_decoder = std::make_unique<AVCodecDecoder>(nullptr);
+    _sw_decoder->init(true);
+#endif
 }
 
 

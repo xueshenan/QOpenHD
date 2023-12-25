@@ -1,21 +1,20 @@
 #ifndef AVCODEC_DECODER_H
 #define AVCODEC_DECODER_H
 
-#include <qtimer.h>
 #include <thread>
 #include <memory>
-
-#include "avcodec_helper.hpp"
-#include "QOpenHDVideoHelper.hpp"
-#include "../../common/TimeHelper.hpp"
-
-#include "rtp/rtpreceiver.h"
-
 #include <mutex>
 #include <deque>
 #include <optional>
 #include <queue>
 #include <atomic>
+#include <qtimer.h>
+
+#include "app/common/TimeHelper.hpp"
+
+#include "rtp/rtpreceiver.h"
+#include "avcodec_helper.hpp"
+#include "QOpenHDVideoHelper.hpp"
 
 /**
  * Decoding and display of primary video on all platforms except android

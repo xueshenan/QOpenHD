@@ -1,26 +1,21 @@
 #ifndef RTPRECEIVER_H
 #define RTPRECEIVER_H
 
-
-#include "ParseRTP.h"
-#include <memory>
-#include "../udp/UDPReceiver.h"
-
 #include <fstream>
 #include <mutex>
 #include <functional>
-
-#include "../nalu/NALU.hpp"
-#include "../nalu/KeyFrameFinder.hpp"
-
-#include "common/TimeHelper.hpp"
-#include "common/moodycamel/readerwriterqueue/readerwritercircularbuffer.h"
-
-//#define OPENHD_USE_LIB_UVGRTP
-
+#include <memory>
 #ifdef OPENHD_USE_LIB_UVGRTP
 #include <uvgrtp/lib.hh>
 #endif
+
+#include "app/common/TimeHelper.hpp"
+#include "app/common/moodycamel/readerwriterqueue/readerwritercircularbuffer.h"
+#include "app/videostreaming/vscommon/udp/UDPReceiver.h"
+#include "app/videostreaming/vscommon/nalu/NALU.hpp"
+#include "app/videostreaming/vscommon/nalu/KeyFrameFinder.hpp"
+
+#include "ParseRTP.h"
 
 class RTPReceiver
 {

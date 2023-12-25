@@ -10,7 +10,9 @@
 #include "texturerenderer.h"
 
 #include "avcodec_decoder.h"
+#ifdef ENABLE_MPP_DECODER
 #include "mpp_decoder.h"
+#endif
 
 // QSG stands for QT Screne Graph (an abbreviation they recommend)
 // Hoock into the QT Scene graph and draw video directly with (custom) OpenGL.
@@ -37,7 +39,9 @@ public slots:
     void QQuickWindow_beforeRendering();
     void QQuickWindow_beforeRenderPassRecording();
 private:
+#ifdef ENABLE_MPP_DECODER
     std::unique_ptr<MppDecoder> _hw_decoder = nullptr;
+#endif
     std::unique_ptr<AVCodecDecoder> _sw_decoder = nullptr;
     bool _use_sw_decoder = false;
 };

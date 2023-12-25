@@ -4,10 +4,11 @@
 #include <algorithm>
 #include <QSettings>
 
+#include "videostreaming/vscommon/QOpenHDVideoHelper.hpp"
+#include "videostreaming/vscommon/video_ratio_helper.hpp"
+
 #include "avcodec_helper.hpp"
 #include "decodingstatistcs.h"
-#include "../vscommon/QOpenHDVideoHelper.hpp"
-#include "../vscommon/video_ratio_helper.hpp"
 
 static bool get_dev_draw_alternating_rgb_dummy_frames() {
     QSettings settings;

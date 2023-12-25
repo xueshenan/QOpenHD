@@ -7,14 +7,13 @@
 
 #include "common/TimeHelper.hpp"
 #include "common/util_fs.h"
+#include "common/SchedulingHelper.hpp"
+#include "util/WorkaroundMessageBox.h"
+#include "logging/hudlogmessagesmodel.h"
+#include "logging/logmessagesmodel.h"
 
 #include "texturerenderer.h"
 #include "decodingstatistcs.h"
-#include "common/SchedulingHelper.hpp"
-#include "../util/WorkaroundMessageBox.h"
-#include "../logging/hudlogmessagesmodel.h"
-#include "../logging/logmessagesmodel.h"
-
 #include "ExternalDecodeService.hpp"
 
 MppDecoder::MppDecoder(QObject *parent) : QObject(parent) {

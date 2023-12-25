@@ -1,11 +1,12 @@
 //
 // Created by consti10 on 15.09.22.
 //
-
-#include "gl_videorenderer.h"
-#include "../color_helper.h"
 #include <GL/gl.h>
 #include <chrono>
+
+#include "app/videostreaming/avcodec/color_helper.h"
+#include "gl_videorenderer.h"
+
 
 static EGLint texgen_attrs[] = {
 	EGL_DMA_BUF_PLANE0_FD_EXT,

@@ -1,15 +1,15 @@
 #ifndef EXTERNALDECODESERVICE_H
 #define EXTERNALDECODESERVICE_H
 
-#include "QOpenHDVideoHelper.hpp"
-#include "common/openhd-util.hpp"
-#include "common/util_fs.h"
-#include "decodingstatistcs.h"
-
-#include <../logging/logmessagesmodel.h>
-#include <../logging/hudlogmessagesmodel.h>
 #include <thread>
 
+#include "app/common/openhd-util.hpp"
+#include "app/common/util_fs.h"
+#include "app/logging/logmessagesmodel.h"
+#include "app/logging/hudlogmessagesmodel.h"
+
+#include "decodingstatistcs.h"
+#include "QOpenHDVideoHelper.hpp"
 
 //
 // On some platforms, it is easiest to just start and stop a service that does the video decode (QOpenHD is then transparently layered on top)
